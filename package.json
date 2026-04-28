@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vercel:dev": "vercel dev",
+    "vercel:preview": "vercel",
+    "vercel:prod": "vercel --prod",
+    "vercel:pull": "vercel env pull"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
