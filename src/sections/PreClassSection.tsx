@@ -25,7 +25,11 @@ const PERSPECTIVES = [
 
 const STEPS = ["主题选定", "选择参考资料", "选题", "大纲", "场景", "就绪"];
 
-export default function PreClassSection() {
+interface PreClassSectionProps {
+  onComplete?: () => void;
+}
+
+export default function PreClassSection({ onComplete }: PreClassSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   // Core states
@@ -158,7 +162,6 @@ export default function PreClassSection() {
               <span className="text-sm text-ink-500">邀请码：</span>
               <span className="text-sm font-mono font-semibold text-gold-600 tracking-wider">YUFUXTPB</span>
             </div>
-            <button className="px-4 py-2 border border-cinnabar/30 text-cinnabar rounded-btn hover:bg-cinnabar hover:text-white transition-all text-sm">退出教室</button>
           </div>
         </div>
 
@@ -377,7 +380,16 @@ export default function PreClassSection() {
                     <div className="px-8">
                       <p className="text-gold-300 text-xs tracking-[0.2em] mb-2">READY TO START</p>
                       <p className="font-lishu text-2xl text-white tracking-wider mb-3">一切准备就绪</p>
-                      <p className="text-sm text-white/70">课程大纲已生成 · 参考资料已确认 · 选题视角已选定</p>
+                      <p className="text-sm text-white/70 mb-4">课程大纲已生成 · 参考资料已确认 · 选题视角已选定</p>
+                      {onComplete && (
+                        <button
+                          onClick={onComplete}
+                          className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-lishu flex items-center gap-2 hover:bg-cinnabar/90 transition-all"
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                          开始课堂
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

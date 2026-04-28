@@ -2,15 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { DEMO_KNOWLEDGE_TREE, DEMO_TIMELINE } from "../lib/data";
 
-const DISCIPLINES = [
-  { id: "all", label: "全部知识", color: "#6B6B6B" },
-  { id: "art", label: "美术学", color: "#5A7A96" },
-  { id: "music", label: "音乐学", color: "#C4963D" },
-  { id: "drama", label: "戏剧戏曲", color: "#B54A3F" },
-  { id: "film", label: "影视艺术", color: "#6B8E6B" },
-  { id: "theory", label: "美学理论", color: "#9E9E9E" },
-];
-
 interface TreeNode {
   id: string;
   name: string;
@@ -19,7 +10,6 @@ interface TreeNode {
 
 export default function PostClassSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [activeDiscipline, setActiveDiscipline] = useState("all");
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(["root"]));
   const [expandedRecord, setExpandedRecord] = useState<number | null>(null);
   const [videoProgress, setVideoProgress] = useState(35);
@@ -104,119 +94,95 @@ export default function PostClassSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Book Spine Nav */}
-          <div className="lg:col-span-2 post-anim">
-            <div className="bg-xuan-aged/80 backdrop-blur-sm rounded-card p-4 shadow-paper border border-gold-600/10">
-              <h3 className="text-sm font-semibold text-ink-900 mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-5 bg-gold-600 rounded-full" />
-                知识分类
+        {/* Main Content */}
+        <div className="space-y-6">
+          {/* Knowledge Tree */}
+          <div className="post-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-chapter text-ink-900 flex items-center gap-2">
+                <span className="w-1 h-6 bg-gold-600 rounded-full" />
+                知识梳理
               </h3>
-              <div className="space-y-1">
-                {DISCIPLINES.map((d) => (
-                  <button
-                    key={d.id}
-                    onClick={() => setActiveDiscipline(d.id)}
-                    className={`w-full flex items-center gap-3 py-3 px-3 rounded-card text-left transition-all duration-300 ${activeDiscipline === d.id ? "bg-xuan-white shadow-scroll translate-x-1" : "hover:bg-xuan-white/60"}`}
-                  >
-                    <div className="w-1 h-7 rounded-full flex-shrink-0 transition-all" style={{ backgroundColor: d.color }} />
-                    <span className={`text-sm ${activeDiscipline === d.id ? "text-ink-900 font-semibold" : "text-ink-500"}`}>{d.label}</span>
-                  </button>
-                ))}
-              </div>
+              <span className="text-xs text-ink-400">点击节点展开详情</span>
             </div>
+            <div className="max-w-2xl">{renderTree(DEMO_KNOWLEDGE_TREE)}</div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-10 space-y-6">
-            {/* Knowledge Tree */}
+          {/* Timeline + Video */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="post-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-chapter text-ink-900 flex items-center gap-2">
                   <span className="w-1 h-6 bg-gold-600 rounded-full" />
-                  知识梳理
+                  课堂讨论归档
                 </h3>
-                <span className="text-xs text-ink-400">点击节点展开详情</span>
+                <div className="ink-input">
+                  <input type="text" placeholder="检..." className="w-20 bg-transparent py-1 text-sm text-ink-900 placeholder:text-ink-300 outline-none" />
+                </div>
               </div>
-              <div className="max-w-2xl">{renderTree(DEMO_KNOWLEDGE_TREE)}</div>
+              <div className="relative pl-6">
+                <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-gold-600 via-gold-300 to-transparent" />
+                <div className="space-y-4">
+                  {DEMO_TIMELINE.map((record) => (
+                    <div key={record.id} className="relative">
+                      <div
+                        className={`absolute -left-6 top-2 w-3.5 h-3.5 rounded-full border-2 border-gold-600 bg-white transition-all cursor-pointer hover:scale-150 hover:bg-gold-600 hover:shadow-[0_0_0_8px_rgba(196,150,61,0.15)] ${expandedRecord === record.id ? "bg-gold-600" : ""}`}
+                        onClick={() => setExpandedRecord(expandedRecord === record.id ? null : record.id)}
+                      />
+                      <div
+                        className={`rounded-card p-3.5 cursor-pointer transition-all duration-300 ${expandedRecord === record.id ? "bg-gold-100/50 border border-gold-600/20" : "hover:bg-xuan-aged/30 border border-transparent"}`}
+                        onClick={() => setExpandedRecord(expandedRecord === record.id ? null : record.id)}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className="text-xs text-ink-300 font-mono">{record.time}</span>
+                          <div className="w-5 h-5 rounded-full bg-xuan-aged flex items-center justify-center text-xs text-ink-500">{record.speaker[0]}</div>
+                          <span className="text-xs text-ink-500">{record.speaker}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-btn bg-xuan-aged text-ink-400">{record.topic}</span>
+                        </div>
+                        <p className="text-sm text-ink-700 leading-relaxed">{record.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Timeline + Video */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="post-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-chapter text-ink-900 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-gold-600 rounded-full" />
-                    课堂讨论归档
-                  </h3>
-                  <div className="ink-input">
-                    <input type="text" placeholder="检..." className="w-20 bg-transparent py-1 text-sm text-ink-900 placeholder:text-ink-300 outline-none" />
+            {/* Video */}
+            <div className="post-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
+              <h3 className="text-chapter text-ink-900 mb-4 flex items-center gap-2">
+                <span className="w-1 h-6 bg-gold-600 rounded-full" />
+                课程回放
+              </h3>
+              <div className="relative">
+                <div className="h-4 bg-gradient-to-r from-ink-900 via-ink-700 to-ink-900 rounded-t-card" />
+                <div className="relative aspect-video bg-ink-900/5 overflow-hidden">
+                  <img src="/images/replay-scene.jpg" alt="课程回放" className="w-full h-full object-cover opacity-70" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button onClick={() => setIsPlaying(!isPlaying)} className="w-16 h-16 rounded-full bg-cinnabar/90 text-white flex items-center justify-center hover:scale-110 transition-transform seal-btn shadow-seal">
+                      {isPlaying ? (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+                      ) : (
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                      )}
+                    </button>
                   </div>
                 </div>
-                <div className="relative pl-6">
-                  <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-gold-600 via-gold-300 to-transparent" />
-                  <div className="space-y-4">
-                    {DEMO_TIMELINE.map((record) => (
-                      <div key={record.id} className="relative">
-                        <div
-                          className={`absolute -left-6 top-2 w-3.5 h-3.5 rounded-full border-2 border-gold-600 bg-white transition-all cursor-pointer hover:scale-150 hover:bg-gold-600 hover:shadow-[0_0_0_8px_rgba(196,150,61,0.15)] ${expandedRecord === record.id ? "bg-gold-600" : ""}`}
-                          onClick={() => setExpandedRecord(expandedRecord === record.id ? null : record.id)}
-                        />
-                        <div
-                          className={`rounded-card p-3.5 cursor-pointer transition-all duration-300 ${expandedRecord === record.id ? "bg-gold-100/50 border border-gold-600/20" : "hover:bg-xuan-aged/30 border border-transparent"}`}
-                          onClick={() => setExpandedRecord(expandedRecord === record.id ? null : record.id)}
-                        >
-                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                            <span className="text-xs text-ink-300 font-mono">{record.time}</span>
-                            <div className="w-5 h-5 rounded-full bg-xuan-aged flex items-center justify-center text-xs text-ink-500">{record.speaker[0]}</div>
-                            <span className="text-xs text-ink-500">{record.speaker}</span>
-                            <span className="text-xs px-2 py-0.5 rounded-btn bg-xuan-aged text-ink-400">{record.topic}</span>
-                          </div>
-                          <p className="text-sm text-ink-700 leading-relaxed">{record.content}</p>
+                <div className="h-4 bg-gradient-to-r from-ink-900 via-ink-700 to-ink-900 rounded-b-card" />
+
+                <div className="mt-4 px-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-ink-400 font-mono">15:45</span>
+                    <div className="flex-1 relative">
+                      <div className="h-1.5 bg-xuan-aged rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-gold-600 to-gold-400 rounded-full relative transition-all" style={{ width: `${videoProgress}%` }}>
+                          {[15, 30, 50, 70].map((pos) => (
+                            <div key={pos} className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-gold-600 rounded-full cursor-pointer hover:scale-175 transition-transform border border-xuan-white" style={{ left: `${pos}%` }} />
+                          ))}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Video */}
-              <div className="post-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                <h3 className="text-chapter text-ink-900 mb-4 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-gold-600 rounded-full" />
-                  课程回放
-                </h3>
-                <div className="relative">
-                  <div className="h-4 bg-gradient-to-r from-ink-900 via-ink-700 to-ink-900 rounded-t-card" />
-                  <div className="relative aspect-video bg-ink-900/5 overflow-hidden">
-                    <img src="/images/replay-scene.jpg" alt="课程回放" className="w-full h-full object-cover opacity-70" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <button onClick={() => setIsPlaying(!isPlaying)} className="w-16 h-16 rounded-full bg-cinnabar/90 text-white flex items-center justify-center hover:scale-110 transition-transform seal-btn shadow-seal">
-                        {isPlaying ? (
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
-                        ) : (
-                          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                        )}
-                      </button>
+                      <input type="range" min="0" max="100" value={videoProgress} onChange={(e) => setVideoProgress(Number(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     </div>
-                  </div>
-                  <div className="h-4 bg-gradient-to-r from-ink-900 via-ink-700 to-ink-900 rounded-b-card" />
-
-                  <div className="mt-4 px-1">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-ink-400 font-mono">15:45</span>
-                      <div className="flex-1 relative">
-                        <div className="h-1.5 bg-xuan-aged rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-gold-600 to-gold-400 rounded-full relative transition-all" style={{ width: `${videoProgress}%` }}>
-                            {[15, 30, 50, 70].map((pos) => (
-                              <div key={pos} className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-gold-600 rounded-full cursor-pointer hover:scale-175 transition-transform border border-xuan-white" style={{ left: `${pos}%` }} />
-                            ))}
-                          </div>
-                        </div>
-                        <input type="range" min="0" max="100" value={videoProgress} onChange={(e) => setVideoProgress(Number(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                      </div>
-                      <span className="text-xs text-ink-400 font-mono">45:00</span>
-                    </div>
+                    <span className="text-xs text-ink-400 font-mono">45:00</span>
                   </div>
                 </div>
               </div>
