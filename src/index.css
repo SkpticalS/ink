@@ -21,63 +21,126 @@
   --shadow-scroll: 0 4px 20px rgba(26, 26, 26, 0.08), 0 1px 3px rgba(26, 26, 26, 0.05);
   --shadow-seal: 0 2px 8px rgba(181, 74, 63, 0.15);
   --shadow-frame: 0 8px 32px rgba(26, 26, 26, 0.12);
+
+  /* ===== FONT FAMILY ===== */
+  --font-wenkai: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", "PingFang SC", "Microsoft YaHei", serif;
+  --font-wenkai-light: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+  --font-display: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+  --font-title: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+  --font-chapter: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+  --font-body: "LXGW WenKai", "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-annotation: "LXGW WenKai", "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "LXGW WenKai", "Noto Sans SC", sans-serif;
 }
 
 @layer base {
   body {
     background-color: var(--color-xuan-white);
     color: var(--color-ink-900);
-    font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "WenQuanYi Micro Hei", sans-serif;
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    font-weight: 400;
     line-height: 1.8;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.02em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   html { scroll-behavior: smooth; }
 }
 
-/* ===== TITLE FONT: 隶书 style ===== */
+/* ===== FONT HIERARCHY: 霞鹜文楷 ===== */
 @layer components {
-  .font-lishu {
-    font-family: "LiSu", "STLiti", "SimLi", "FangSong", "Noto Serif SC", serif;
-    font-weight: normal;
-    letter-spacing: 0.08em;
-  }
-
-  .text-display {
-    font-family: "LiSu", "STLiti", "SimLi", "FangSong", "Noto Serif SC", serif;
-    font-weight: normal;
+  /* Display: 超大标题（登录页主标题等）— 气势磅礡 */
+  .font-display {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+    font-weight: 700;
     font-size: clamp(36px, 6vw, 64px);
     line-height: 1.2;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
   }
-  .text-title {
-    font-family: "LiSu", "STLiti", "SimLi", "FangSong", "Noto Serif SC", serif;
-    font-weight: normal;
+
+  /* Title: 页面/板块标题 */
+  .font-title {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+    font-weight: 700;
     font-size: clamp(28px, 3.5vw, 40px);
     line-height: 1.3;
-    letter-spacing: 0.08em;
-  }
-  .text-chapter {
-    font-family: "LiSu", "STLiti", "SimLi", "FangSong", "Noto Serif SC", serif;
-    font-weight: normal;
-    font-size: clamp(18px, 2vw, 24px);
-    line-height: 1.5;
     letter-spacing: 0.06em;
   }
 
-  /* 正文使用微软雅黑 */
-  .text-body {
-    font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
-    font-size: 16px;
+  /* Chapter: 章节/卡片标题 */
+  .font-chapter {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
     font-weight: 400;
+    font-size: clamp(18px, 2vw, 24px);
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+  }
+
+  /* Body: 正文 — 屏显优化，长时间阅读舒适 */
+  .font-body {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.8;
+    letter-spacing: 0.02em;
+  }
+
+  /* Annotation: 注释/说明 — 轻盈不抢眼 */
+  .font-annotation {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+
+  /* UI: 按钮/标签/导航 — 清晰易读 */
+  .font-ui {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  /* Legacy compat: 兼容旧代码中的 font-lishu */
+  .font-lishu {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  /* Legacy text-xxx classes */
+  .text-display {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+    font-weight: 700;
+    font-size: clamp(36px, 6vw, 64px);
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+  }
+  .text-title {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+    font-weight: 700;
+    font-size: clamp(28px, 3.5vw, 40px);
+    line-height: 1.3;
+    letter-spacing: 0.06em;
+  }
+  .text-chapter {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "Noto Serif SC", serif;
+    font-weight: 400;
+    font-size: clamp(18px, 2vw, 24px);
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+  }
+  .text-body {
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
     line-height: 1.8;
     letter-spacing: 0.02em;
   }
   .text-annotation {
-    font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    font-family: "LXGW WenKai", "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 300;
     font-size: 14px;
-    font-weight: 400;
     line-height: 1.6;
     letter-spacing: 0.01em;
   }

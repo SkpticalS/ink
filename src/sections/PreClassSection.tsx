@@ -146,7 +146,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
         {/* ====== HEADER BAR ====== */}
         <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-5 shadow-paper border border-gold-600/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="font-lishu text-2xl text-ink-900 tracking-wider mb-1">{title}</h2>
+            <h2 className="font-title text-2xl text-ink-900 tracking-wider mb-1">{title}</h2>
             <div className="flex items-center gap-2 text-sm text-ink-400">
               <span>教室状态：</span>
               <span className={`px-2 py-0.5 rounded-full text-xs ${phase === "ready" ? "bg-stone-green/15 text-stone-green" : phase !== "info" ? "bg-gold-100 text-gold-600" : "bg-xuan-aged text-ink-500"}`}>
@@ -173,7 +173,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
             {phase === "info" && (
               <>
                 <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                  <h3 className="font-lishu text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
+                  <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
                     <span className="w-1 h-5 bg-gold-600 rounded-full" />教室信息
                   </h3>
                   <div className="space-y-4">
@@ -190,7 +190,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
 
                 <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-lishu text-lg text-ink-900 tracking-wider">探讨主题</h3>
+                    <h3 className="font-chapter text-lg text-ink-900 tracking-wider">探讨主题</h3>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-ink-400">准备好一起学习了吗？</span>
                       {DEMO_MEMBERS.slice(0, 3).map(m => (
@@ -204,7 +204,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
                       <button className="px-3 py-2 bg-gold-600/10 text-gold-600 rounded-btn text-sm border border-gold-600/20 hover:bg-gold-600 hover:text-white transition-all flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12l8-2"/></svg>配置模型</button>
                       <button className="px-3 py-2 rounded-btn border border-ink-300/20 text-ink-500 text-sm hover:border-gold-600 hover:text-gold-600 transition-all flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>模型设置</button>
                     </div>
-                    <button onClick={handleStartSearch} className="px-8 py-2.5 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-lishu flex items-center gap-2">
+                    <button onClick={handleStartSearch} className="px-8 py-2.5 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2">
                       开始检索<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
                   </div>
@@ -218,7 +218,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gold-600/10 flex items-center justify-center">
                   <div className="w-8 h-8 border-3 border-gold-600/30 border-t-gold-600 rounded-full animate-spin" />
                 </div>
-                <h3 className="font-lishu text-xl text-ink-900 mb-2 tracking-wider">正在检索资料...</h3>
+                <h3 className="font-title text-xl text-ink-900 mb-2 tracking-wider">正在检索资料...</h3>
                 <p className="text-sm text-ink-500">系统正在联网搜索相关文献和资料</p>
                 <div className="mt-6 h-2 bg-xuan-aged rounded-full overflow-hidden max-w-md mx-auto">
                   <div className="h-full bg-gradient-to-r from-gold-600 to-gold-400 rounded-full animate-pulse" style={{ width: "60%" }} />
@@ -230,7 +230,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
             {(phase === "review" || phase === "perspective" || phase === "outline" || phase === "ready") && (
               <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-lishu text-lg text-ink-900 flex items-center gap-2 tracking-wider">
+                  <h3 className="font-chapter text-lg text-ink-900 flex items-center gap-2 tracking-wider">
                     <span className="w-1 h-5 bg-gold-600 rounded-full" />
                     课前资料与选题
                   </h3>
@@ -281,7 +281,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
                     <button
                       onClick={handleConfirmSources}
                       disabled={checkedCount === 0}
-                      className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-lishu flex items-center gap-2 disabled:opacity-50"
+                      className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2 disabled:opacity-50"
                     >
                       确认选题<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
@@ -293,7 +293,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
             {/* Phase: PERSPECTIVE - Literature review + 3 perspectives */}
             {(phase === "perspective" || phase === "outline" || phase === "ready") && (
               <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                <h3 className="font-lishu text-lg text-ink-900 mb-4 flex items-center gap-2 tracking-wider">
+                <h3 className="font-chapter text-lg text-ink-900 mb-4 flex items-center gap-2 tracking-wider">
                   <span className="w-1 h-5 bg-gold-600 rounded-full" />
                   文献综述与选题视角
                 </h3>
@@ -321,10 +321,10 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                         </div>
                       )}
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-lishu mb-3 ${selectedPerspective === p.id ? "bg-gold-600 text-white" : "bg-gold-600/10 text-gold-600"}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold mb-3 ${selectedPerspective === p.id ? "bg-gold-600 text-white" : "bg-gold-600/10 text-gold-600"}`}>
                         {["一", "二", "三"][p.id - 1]}
                       </div>
-                      <h5 className="font-lishu text-base text-ink-900 mb-1 tracking-wider">{p.title}</h5>
+                      <h5 className="font-chapter text-base text-ink-900 mb-1 tracking-wider">{p.title}</h5>
                       <p className="text-xs text-gold-600 mb-2">{p.subtitle}</p>
                       <p className="text-xs text-ink-500 leading-relaxed">{p.desc}</p>
                     </div>
@@ -336,7 +336,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
                     <button
                       onClick={handleGenerateOutline}
                       disabled={!selectedPerspective}
-                      className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-lishu flex items-center gap-2 disabled:opacity-50"
+                      className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2 disabled:opacity-50"
                     >
                       下一步：生成大纲<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
@@ -348,14 +348,14 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
             {/* Phase: OUTLINE */}
             {(phase === "outline" || phase === "ready") && (
               <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                <h3 className="font-lishu text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
+                <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
                   <span className="w-1 h-5 bg-gold-600 rounded-full" />
                   课程大纲
                 </h3>
                 <div className="space-y-3">
                   {outline.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3 p-4 bg-xuan-aged/30 rounded-card hover:bg-xuan-aged/50 transition-all border-l-3 border-gold-600/40">
-                      <span className="flex-shrink-0 w-8 h-8 bg-gold-600/10 text-gold-600 rounded-full flex items-center justify-center text-sm font-bold font-lishu">{idx + 1}</span>
+                      <span className="flex-shrink-0 w-8 h-8 bg-gold-600/10 text-gold-600 rounded-full flex items-center justify-center text-sm font-bold font-chapter">{idx + 1}</span>
                       <span className="text-sm text-ink-900">{item}</span>
                     </div>
                   ))}
@@ -379,12 +379,12 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
                   <div className="absolute inset-0 bg-gradient-to-r from-ink-900/60 via-ink-900/30 to-transparent flex items-center">
                     <div className="px-8">
                       <p className="text-gold-300 text-xs tracking-[0.2em] mb-2">READY TO START</p>
-                      <p className="font-lishu text-2xl text-white tracking-wider mb-3">一切准备就绪</p>
+                      <p className="font-title text-2xl text-white tracking-wider mb-3">一切准备就绪</p>
                       <p className="text-sm text-white/70 mb-4">课程大纲已生成 · 参考资料已确认 · 选题视角已选定</p>
                       {onComplete && (
                         <button
                           onClick={onComplete}
-                          className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-lishu flex items-center gap-2 hover:bg-cinnabar/90 transition-all"
+                          className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2 hover:bg-cinnabar/90 transition-all"
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                           开始课堂
@@ -401,7 +401,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
           <div className="lg:col-span-5 space-y-6">
             {/* Progress Panel */}
             <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-              <h3 className="font-lishu text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
+              <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
                 <span className="w-1 h-5 bg-gold-600 rounded-full" />
                 课堂准备状态
               </h3>
@@ -457,7 +457,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
 
             {/* Members */}
             <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-              <h3 className="font-lishu text-lg text-ink-900 mb-4 flex items-center gap-2 tracking-wider">
+              <h3 className="font-chapter text-lg text-ink-900 mb-4 flex items-center gap-2 tracking-wider">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-600"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 教室成员 ({DEMO_MEMBERS.filter(m => m.online).length}/30)
               </h3>
@@ -479,7 +479,7 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
 
             {/* Pre-class Discussion */}
             <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-              <h3 className="font-lishu text-lg text-ink-900 mb-4 tracking-wider">课前讨论</h3>
+              <h3 className="font-chapter text-lg text-ink-900 mb-4 tracking-wider">课前讨论</h3>
               <div className="space-y-3 mb-4">
                 <div className="flex items-start gap-3 p-3 bg-xuan-aged/30 rounded-card">
                   <div className="w-8 h-8 rounded-full bg-gold-600/10 text-gold-600 flex items-center justify-center text-xs font-bold flex-shrink-0">张</div>

@@ -66,7 +66,7 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
                 <img src="/images/seal-logo.png" alt="墨课" className="w-full h-full object-contain" />
               </div>
               <div>
-                <h1 className="font-lishu text-2xl text-ink-900 tracking-widest">墨课</h1>
+                <h1 className="font-title text-ink-900 tracking-widest">墨课</h1>
                 <p className="text-xs text-ink-400 tracking-wider">在线课堂大厅</p>
               </div>
             </div>
@@ -87,12 +87,12 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
         <div className="lobby-anim mb-8">
           <div className="bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gold-600/10 border-2 border-gold-600/30 flex items-center justify-center text-xl text-gold-600 font-lishu">
+              <div className="w-14 h-14 rounded-full bg-gold-600/10 border-2 border-gold-600/30 flex items-center justify-center text-xl text-gold-600 font-title">
                 罗
               </div>
               <div>
                 <p className="text-xs text-ink-400 mb-0.5">登录用户</p>
-                <p className="font-lishu text-xl text-ink-900 tracking-wider">罗文韬</p>
+                <p className="font-title text-xl text-ink-900 tracking-wider">罗文韬</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-2 text-xs text-ink-400">
@@ -106,7 +106,7 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
           {/* Left: Create Classroom */}
           <div className="lg:col-span-5 lobby-anim">
             <div className="bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10 h-full">
-              <h3 className="font-lishu text-xl text-ink-900 mb-6 flex items-center gap-2 tracking-wider">
+              <h3 className="font-title text-xl text-ink-900 mb-6 flex items-center gap-2 tracking-wider">
                 <span className="w-6 h-6 rounded-full bg-gold-600/10 text-gold-600 flex items-center justify-center text-sm">+</span>
                 新建教室
               </h3>
@@ -151,7 +151,7 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
                 <button
                   onClick={handleCreate}
                   disabled={animating}
-                  className="w-full py-3.5 bg-gold-600 text-white text-base rounded-btn gold-btn tracking-wider font-lishu flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-gold-600 text-white text-base rounded-btn gold-btn tracking-wider font-title flex items-center justify-center gap-2"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
                   创建并进入教室
@@ -163,7 +163,7 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
           {/* Right: Classroom List */}
           <div className="lg:col-span-7 lobby-anim">
             <div className="bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10 h-full">
-              <h3 className="font-lishu text-xl text-ink-900 mb-6 flex items-center gap-2 tracking-wider">
+              <h3 className="font-title text-xl text-ink-900 mb-6 flex items-center gap-2 tracking-wider">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-600"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 在线教室列表
               </h3>
@@ -177,7 +177,7 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h4 className="font-lishu text-lg text-ink-900 tracking-wider">{room.name}</h4>
+                          <h4 className="font-chapter text-lg text-ink-900 tracking-wider">{room.name}</h4>
                           <span className={`text-xs px-2.5 py-0.5 rounded-full ${room.status === "进行中" ? "bg-stone-green/15 text-stone-green" : "bg-gold-600/15 text-gold-600"}`}>
                             {room.status}
                           </span>

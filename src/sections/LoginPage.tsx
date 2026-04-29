@@ -49,7 +49,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               <img src="/images/seal-logo.png" alt="墨课" className="w-full h-full object-contain" />
             </div>
             <div className="text-left">
-              <h1 className="font-lishu text-3xl text-ink-900 tracking-widest">墨课</h1>
+              <h1 className="font-display text-ink-900 tracking-widest">墨课</h1>
               <p className="text-xs text-ink-400 tracking-[0.15em] mt-0.5">中国艺术学AI平台</p>
             </div>
           </div>
@@ -63,7 +63,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         {/* Login Card */}
         <div className="login-anim chinese-frame shadow-frame">
           <div className="chinese-frame-inner p-8">
-            <h2 className="font-lishu text-2xl text-ink-900 text-center mb-8 tracking-widest">登入墨堂</h2>
+            <h2 className="font-title text-2xl text-ink-900 text-center mb-8 tracking-widest">登入墨堂</h2>
 
             {/* Account */}
             <div className="mb-6">
@@ -97,7 +97,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <button
               onClick={handleLogin}
               disabled={animating}
-              className="w-full py-3.5 bg-cinnabar text-white text-lg rounded-btn seal-btn tracking-widest font-lishu"
+              className="w-full py-3.5 bg-cinnabar text-white text-lg rounded-btn seal-btn tracking-widest font-chapter"
             >
               {animating ? "登入中..." : "登入"}
             </button>
@@ -122,4 +122,3 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       </div>
     </div>
   );
-}

@@ -24,9 +24,13 @@ export default {
         "stone-green": "#6B8E6B",
       },
       fontFamily: {
-        display: ["'Noto Serif SC'", "Source Han Serif SC", "SimSun", "serif"],
-        body: ["'Noto Serif SC'", "PingFang SC", "Microsoft YaHei", "serif"],
-        mono: ["'LXGW WenKai'", "Noto Sans SC", "sans-serif"],
+        display: ["'LXGW WenKai'", "'LXGW WenKai Screen'", "'Noto Serif SC'", "serif"],
+        title: ["'LXGW WenKai'", "'LXGW WenKai Screen'", "'Noto Serif SC'", "serif"],
+        chapter: ["'LXGW WenKai'", "'LXGW WenKai Screen'", "'Noto Serif SC'", "serif"],
+        body: ["'LXGW WenKai'", "'LXGW WenKai Screen'", "'PingFang SC'", "'Microsoft YaHei'", "sans-serif"],
+        annotation: ["'LXGW WenKai'", "'LXGW WenKai Screen'", "'PingFang SC'", "'Microsoft YaHei'", "sans-serif"],
+        wenkai: ["'LXGW WenKai'", "'LXGW WenKai Screen'", "'Noto Serif SC'", "serif"],
+        mono: ["'LXGW WenKai'", "'Noto Sans SC'", "sans-serif"],
       },
       borderRadius: {
         "page": "4px 2px 6px 3px",
