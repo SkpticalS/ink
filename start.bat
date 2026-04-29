@@ -26,7 +26,12 @@ if not exist node_modules (
     )
 )
 
-echo [INFO] Starting dev server at http://localhost:3000
+echo [INFO] Starting Vite dev server...
+echo [INFO] Please wait, browser will open: http://localhost:5173
 echo.
-start http://localhost:3000
+echo To preview production build:
+echo   npm run build ^&^& npm run preview
+echo.
+
+start http://localhost:5173
 npm run dev

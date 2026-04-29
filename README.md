@@ -15,10 +15,12 @@ npm install
 # 2. 启动开发服务器
 npm run dev
 
-# 3. 浏览器访问 http://localhost:3000
+# 3. 浏览器访问 http://localhost:5173
 ```
 
-> 开发服务器已配置端口为 **3000**（不再是Vite默认的5173）
+> Vite 默认端口为 **5173**
+
+或双击 `start.bat` (Windows) 或运行 `./start.sh` (Mac/Linux) 一键启动。
 
 ### 方式二：预览构建产物
 
@@ -41,10 +43,10 @@ npm run preview
 
 ```bash
 # 使用 Python（方式1）
-cd dist && python3 -m http.server 3000
+cd dist && python3 -m http.server 5173
 
 # 或使用 Python（方式2）
-cd dist && python -m SimpleHTTPServer 3000
+cd dist && python -m SimpleHTTPServer 5173
 
 # 或使用 Node.js 的 serve
 npx serve dist
