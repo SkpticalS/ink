@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { DEMO_MEMBERS } from "../lib/data";
+import GenerationDetail from "./GenerationDetail";
 
 // 10 mock search results for user to review
 const MOCK_SOURCES = [
@@ -198,15 +199,42 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
                       ))}
                     </div>
                   </div>
-                  <textarea value={topic} onChange={e => setTopic(e.target.value)} rows={4} className="w-full bg-xuan-aged/20 rounded-card p-4 text-ink-900 outline-none focus:bg-xuan-aged/40 transition-colors resize-none border border-transparent focus:border-gold-600/20 mb-4" />
+                  <textarea
+                    value={topic}
+                    onChange={e => setTopic(e.target.value)}
+                    rows={3}
+                    className="w-full bg-xuan-aged/20 rounded-card p-4 text-ink-900 outline-none focus:bg-xuan-aged/40 transition-colors resize-none border border-transparent focus:border-gold-600/20 mb-4"
+                  />
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-2">
-                      <button className="px-3 py-2 bg-gold-600/10 text-gold-600 rounded-btn text-sm border border-gold-600/20 hover:bg-gold-600 hover:text-white transition-all flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12l8-2"/></svg>配置模型</button>
-                      <button className="px-3 py-2 rounded-btn border border-ink-300/20 text-ink-500 text-sm hover:border-gold-600 hover:text-gold-600 transition-all flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>模型设置</button>
+                      <button className="px-3 py-2 bg-gold-600/10 text-gold-600 rounded-btn text-sm border border-gold-600/20 hover:bg-gold-600 hover:text-white transition-all flex items-center gap-1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        配置模型
+                      </button>
+                      <button className="p-2 rounded-btn border border-ink-300/20 text-ink-500 hover:border-gold-600 hover:text-gold-600 transition-all" title="上传附件">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      </button>
+                      <button className="p-2 rounded-btn border border-ink-300/20 text-ink-500 hover:border-gold-600 hover:text-gold-600 transition-all" title="联网检索">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+                      </button>
+                      <button className="px-2.5 py-2 rounded-btn border border-ink-300/20 text-ink-500 hover:border-gold-600 hover:text-gold-600 transition-all flex items-center gap-1 text-sm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        中文
+                      </button>
+                      <button className="px-2.5 py-2 rounded-btn border border-violet-300/30 text-violet-500 hover:bg-violet-50 transition-all flex items-center gap-1 text-sm" title="语音合成 / 语音识别">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                      </button>
                     </div>
-                    <button onClick={handleStartSearch} className="px-8 py-2.5 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2">
-                      开始检索<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button className="p-2 rounded-btn border border-ink-300/20 text-ink-500 hover:border-cinnabar hover:text-cinnabar transition-all" title="语音输入">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                      </button>
+                      <button onClick={handleStartSearch} className="px-5 py-2.5 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2 hover:bg-cinnabar/90 transition-all">
+                        开始检索
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>
@@ -345,30 +373,35 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
               </div>
             )}
 
-            {/* Phase: OUTLINE */}
+            {/* Phase: OUTLINE - now includes generation detail */}
             {(phase === "outline" || phase === "ready") && (
-              <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
-                  <span className="w-1 h-5 bg-gold-600 rounded-full" />
-                  课程大纲
-                </h3>
-                <div className="space-y-3">
-                  {outline.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-4 bg-xuan-aged/30 rounded-card hover:bg-xuan-aged/50 transition-all border-l-3 border-gold-600/40">
-                      <span className="flex-shrink-0 w-8 h-8 bg-gold-600/10 text-gold-600 rounded-full flex items-center justify-center text-sm font-bold font-chapter">{idx + 1}</span>
-                      <span className="text-sm text-ink-900">{item}</span>
-                    </div>
-                  ))}
-                </div>
-                {phase === "ready" && (
-                  <div className="mt-5 p-4 bg-stone-green/10 rounded-card border border-stone-green/20 text-center">
-                    <p className="text-sm text-stone-green font-semibold flex items-center justify-center gap-2">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                      课程准备完成！可以开始上课了
-                    </p>
+              <>
+                {/* Generation Pipeline Detail (蓝紫色系) */}
+                <GenerationDetail />
+
+                <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10 mt-6">
+                  <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
+                    <span className="w-1 h-5 bg-gold-600 rounded-full" />
+                    课程大纲
+                  </h3>
+                  <div className="space-y-3">
+                    {outline.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-4 bg-xuan-aged/30 rounded-card hover:bg-xuan-aged/50 transition-all border-l-3 border-gold-600/40">
+                        <span className="flex-shrink-0 w-8 h-8 bg-gold-600/10 text-gold-600 rounded-full flex items-center justify-center text-sm font-bold font-chapter">{idx + 1}</span>
+                        <span className="text-sm text-ink-900">{item}</span>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
+                  {phase === "ready" && (
+                    <div className="mt-5 p-4 bg-stone-green/10 rounded-card border border-stone-green/20 text-center">
+                      <p className="text-sm text-stone-green font-semibold flex items-center justify-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        课件生成完成！可以开始上课了
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             {/* Ready banner */}
