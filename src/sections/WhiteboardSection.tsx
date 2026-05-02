@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 
 interface Point {
   x: number;
@@ -35,61 +35,6 @@ export default function WhiteboardSection() {
   const [brushWidth, setBrushWidth] = useState(4);
   const [tool, setTool] = useState<"pen" | "eraser">("pen");
   const [aiDrawing, setAiDrawing] = useState(false);
-
-  // Canvas sizing
-  useEffect(() => {
-    const resize = () => {
-      const canvas = canvasRef.current;
-      const container = containerRef.current;
-      if (!canvas || !container) return;
-      const rect = container.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        redraw(ctx, rect.width, rect.height);
-      }
-    };
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, [strokes]);
-
-  const redraw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
-    ctx.clearRect(0, 0, w, h);
-    // Draw grid background
-    ctx.strokeStyle = "rgba(196, 150, 61, 0.08)";
-    ctx.lineWidth = 0.5;
-    const gridSize = 30;
-    for (let x = 0; x < w; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
-    for (let y = 0; y < h; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-
-    // Draw strokes
-    strokes.forEach(stroke => {
-      drawPath(ctx, stroke.points, stroke.color, stroke.width);
-    });
-  }, [strokes]);
-
-  const drawPath = (ctx: CanvasRenderingContext2D, points: Point[], strokeColor: string, width: number) => {
-    if (points.length < 2) return;
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-      const midX = (prev.x + curr.x) / 2;
-      const midY = (prev.y + curr.y) / 2;
-      ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
-    }
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = width;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.stroke();
-  };
 
   const getPoint = (e: React.MouseEvent | React.TouchEvent): Point => {
     const canvas = canvasRef.current!;
@@ -212,7 +157,7 @@ export default function WhiteboardSection() {
               className={`w-6 h-6 rounded-full border-2 transition-all ${color === c.value && tool === "pen" ? "border-gold-600 scale-110" : "border-transparent hover:scale-105"}`}
               style={{ backgroundColor: c.value }}
               title={c.label}
-            />
+            ></button>
           ))}
         </div>
 
@@ -229,7 +174,7 @@ export default function WhiteboardSection() {
           ))}
         </div>
 
-        <div className="flex-1" />
+        <div className="flex-1" ></div>
 
         {/* Actions */}
         <div className="flex items-center gap-2">
@@ -273,10 +218,10 @@ export default function WhiteboardSection() {
           className="absolute inset-0"
         />
         {/* Corner decorations */}
-        <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-gold-600/30 pointer-events-none" />
-        <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-gold-600/30 pointer-events-none" />
-        <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-gold-600/30 pointer-events-none" />
-        <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-gold-600/30 pointer-events-none" />
+        <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-gold-600/30 pointer-events-none" ></div>
+        <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-gold-600/30 pointer-events-none" ></div>
+        <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-gold-600/30 pointer-events-none" ></div>
+        <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-gold-600/30 pointer-events-none" ></div>
         {/* Stroke count */}
         <div className="absolute bottom-3 right-6 text-xs text-ink-300 pointer-events-none">
           {strokes.length} 笔

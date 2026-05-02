@@ -40,7 +40,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" onClick={onClose} ></div>
 
       {/* Panel */}
       <div className="relative bg-xuan-white rounded-card shadow-2xl border border-gold-600/15 w-full max-w-2xl mx-4 max-h-[85vh] overflow-hidden flex flex-col">
@@ -223,7 +223,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                         !darkMode ? "border-gold-600" : "border-transparent"
                       }`}
                     >
-                      <div className="w-full h-12 rounded-card bg-xuan-white border border-gold-600/10 mb-2" />
+                      <div className="w-full h-12 rounded-card bg-xuan-white border border-gold-600/10 mb-2" ></div>
                       <p className="text-xs text-ink-700">浅色</p>
                     </button>
                     <button
@@ -232,7 +232,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                         darkMode ? "border-gold-600" : "border-transparent"
                       }`}
                     >
-                      <div className="w-full h-12 rounded-card bg-ink-900 border border-ink-700 mb-2" />
+                      <div className="w-full h-12 rounded-card bg-ink-900 border border-ink-700 mb-2" ></div>
                       <p className="text-xs text-ink-700">深色</p>
                     </button>
                   </div>

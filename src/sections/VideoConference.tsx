@@ -1,237 +1,172 @@
-import { useState, useEffect, useRef } from "react";
-
-interface VideoParticipant {
-  id: number;
-  name: string;
-  role: "host" | "student" | "expert" | "ai";
-  avatar: string;
-  isSpeaking?: boolean;
-  isCameraOn: boolean;
-  isMicOn: boolean;
-}
-
-const DEMO_PARTICIPANTS: VideoParticipant[] = [
-  { id: 1, name: "罗文韬", role: "host", avatar: "罗", isSpeaking: false, isCameraOn: true, isMicOn: true },
-  { id: 2, name: "李教授", role: "ai", avatar: "李", isSpeaking: true, isCameraOn: true, isMicOn: true },
-  { id: 3, name: "张同学", role: "student", avatar: "张", isSpeaking: false, isCameraOn: true, isMicOn: false },
-  { id: 4, name: "王同学", role: "student", avatar: "王", isSpeaking: false, isCameraOn: true, isMicOn: true },
-  { id: 5, name: "赵同学", role: "student", avatar: "赵", isSpeaking: false, isCameraOn: false, isMicOn: true },
-  { id: 6, name: "周文博", role: "expert", avatar: "周", isSpeaking: false, isCameraOn: true, isMicOn: true },
-];
+import { useState } from "react";
+import type { VideoParticipant } from "../lib/data";
 
 interface VideoConferenceProps {
-  layout: "sidebar" | "gallery";
-  onLayoutChange: (layout: "sidebar" | "gallery") => void;
-  onToggleExpand?: () => void;
-  isExpanded?: boolean;
+  participants?: VideoParticipant[];
 }
 
-export default function VideoConference({ layout, onLayoutChange, onToggleExpand, isExpanded }: VideoConferenceProps) {
-  const [participants, setParticipants] = useState<VideoParticipant[]>(DEMO_PARTICIPANTS);
-  const [activeSpeaker, setActiveSpeaker] = useState<number>(2);
-  const videoRef = useRef<HTMLDivElement>(null);
+/** Get surname (first character) from full name */
+function getSurname(name: string): string {
+  return name.charAt(0);
+}
 
-  // Simulate speaking indicator rotation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setParticipants(prev => prev.map(p => ({
-        ...p,
-        isSpeaking: p.id === activeSpeaker && p.isMicOn,
-      })));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [activeSpeaker]);
+/** Avatar background color by role */
+function avatarBg(role: VideoParticipant["role"]) {
+  switch (role) {
+    case "host": return "bg-gold-600 text-white";
+    case "ai": return "bg-violet-500 text-white";
+    case "expert": return "bg-cinnabar text-white";
+    default: return "bg-ink-600 text-white/80";
+  }
+}
 
-  const roleBadge = (role: VideoParticipant["role"]) => {
-    switch (role) {
-      case "host": return <span className="px-1.5 py-0.5 rounded bg-gold-600/80 text-white text-[10px]">房主</span>;
-      case "ai": return <span className="px-1.5 py-0.5 rounded bg-ink-900/60 text-gold-300 text-[10px]">AI 讲师</span>;
-      case "expert": return <span className="px-1.5 py-0.5 rounded bg-cinnabar/80 text-white text-[10px]">专家</span>;
-      default: return <span className="px-1.5 py-0.5 rounded bg-xuan-aged/60 text-ink-500 text-[10px]">学生</span>;
-    }
-  };
+function roleBadge(role: VideoParticipant["role"]) {
+  switch (role) {
+    case "host": return <span className="px-1 py-0.5 rounded bg-gold-600/80 text-white text-[10px]">房主</span>;
+    case "ai": return <span className="px-1 py-0.5 rounded bg-violet-500/80 text-white text-[10px]">AI</span>;
+    case "expert": return <span className="px-1 py-0.5 rounded bg-cinnabar/80 text-white text-[10px]">专家</span>;
+    default: return <span className="px-1 py-0.5 rounded bg-white/15 text-white/60 text-[10px]">学员</span>;
+  }
+}
 
-  // Sidebar layout: vertical strip on the right side
-  if (layout === "sidebar") {
-    return (
-      <div className="flex flex-col gap-2 w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-ink-400">视频会议 · {participants.filter(p => p.isCameraOn).length} 人在线</span>
-          <div className="flex items-center gap-1">
-            <button onClick={() => onLayoutChange("gallery")} className="p-1 rounded hover:bg-xuan-aged text-ink-400 hover:text-gold-600 transition-all" title="画廊视图">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+function VideoTile({ p, onClick }: { p: VideoParticipant; onClick: () => void }) {
+  return (
+    <div
+      onClick={onClick}
+      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 group
+        ${p.isSpeaking ? "ring-2 ring-stone-green/80 shadow-lg shadow-stone-green/15" : "ring-1 ring-white/5 hover:ring-gold-600/40"}`}
+      style={{ aspectRatio: "4/3" }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-ink-800 via-ink-900 to-ink-950"></div>
+      {!p.isCameraOn && (
+        <div className="absolute inset-0 bg-ink-900/50 backdrop-blur-[1px] flex items-center justify-center z-10">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/30">
+            <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/>
+            <path d="M16 8V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-3"/>
+            <path d="M22 12h-8"/>
+          </svg>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-ink-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+        <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+        </div>
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold shadow-lg group-hover:scale-110 transition-transform ${avatarBg(p.role)}`}>
+          {getSurname(p.name)}
+        </div>
+      </div>
+      {p.isSpeaking && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-12 h-12 rounded-full border-2 border-stone-green/40 animate-ping"></div>
+        </div>
+      )}
+      <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between">
+        <span className="text-[11px] text-white/90 font-medium truncate pr-1">{p.name}</span>
+        {!p.isMicOn && (
+          <div className="w-4 h-4 rounded-full bg-black/50 flex items-center justify-center flex-shrink-0">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-400">
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VideoDetailModal({ p, onClose }: { p: VideoParticipant; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md"></div>
+      <div className="relative bg-ink-900/95 rounded-2xl border border-white/10 shadow-2xl w-full max-w-sm mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="p-8 flex flex-col items-center">
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold mb-3 shadow-lg ${avatarBg(p.role)}`}>
+            {getSurname(p.name)}
+          </div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-white text-lg font-semibold">{p.name}</span>
+            {roleBadge(p.role)}
+          </div>
+          {p.isSpeaking && (
+            <span className="text-xs text-stone-green flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-stone-green animate-pulse"></div>
+              正在发言
+            </span>
+          )}
+        </div>
+        <div className="px-6 pb-6 space-y-3">
+          <div className="flex items-center gap-3 justify-center">
+            <button className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${p.isMicOn ? "bg-ink-800 text-white border border-white/10 hover:bg-ink-700" : "bg-red-500/20 text-red-400 border border-red-500/20"}`}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
             </button>
-            {onToggleExpand && (
-              <button onClick={onToggleExpand} className="p-1 rounded hover:bg-xuan-aged text-ink-400 hover:text-gold-600 transition-all" title={isExpanded ? "收起" : "展开"}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{isExpanded ? <><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></> : <><path d="M15 3h3a2 2 0 0 1 2 2v3"/><path d="M9 21H6a2 2 0 0 1-2-2v-3"/><path d="M21 9v3a2 2 0 0 1-2 2h-3"/><path d="M3 15V12a2 2 0 0 1 2-2h3"/></>}</svg>
-              </button>
-            )}
+            <button className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${p.isCameraOn ? "bg-ink-800 text-white border border-white/10 hover:bg-ink-700" : "bg-red-500/20 text-red-400 border border-red-500/20"}`}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+              </svg>
+            </button>
+          </div>
+          <div className="flex items-center gap-3 justify-center">
+            <button className="w-12 h-12 rounded-full bg-ink-800 border border-white/10 flex items-center justify-center text-white/70 hover:bg-ink-700 transition-all" title="共享屏幕">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </button>
+            <button className="w-12 h-12 rounded-full bg-ink-800 border border-white/10 flex items-center justify-center text-white/70 hover:bg-ink-700 transition-all" title="聊天">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </button>
+            <button className="w-12 h-12 rounded-full bg-red-500/90 border border-red-400/30 flex items-center justify-center text-white hover:bg-red-600 transition-all" title="挂断">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10.68 13.31a6 6 0 0 0 8.76-1.66l-8.76 1.66z"/><path d="M14.31 10.68a6 6 0 0 0-8.76 1.66l8.76-1.66z"/><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9z"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </button>
           </div>
         </div>
-
-        {/* Video strip */}
-        <div className="flex flex-col gap-2 max-h-[480px] overflow-y-auto pr-0.5">
-          {participants.map((p) => (
-            <div key={p.id} className={`relative rounded-card overflow-hidden border-2 transition-all duration-300 ${p.isSpeaking ? "border-gold-600 shadow-md shadow-gold-600/10" : "border-transparent"}`}>
-              <div className="aspect-video bg-gradient-to-br from-ink-800 to-ink-900 flex items-center justify-center relative">
-                {p.isCameraOn ? (
-                  <>
-                    <div className="w-full h-full bg-gradient-to-br from-ink-700 to-ink-900" />
-                    {/* Simulated video placeholder with avatar */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${p.role === "expert" ? "bg-cinnabar text-white" : p.role === "ai" ? "bg-gold-600 text-white" : "bg-xuan-aged text-ink-500"}`}>
-                        {p.avatar}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${p.role === "expert" ? "bg-cinnabar text-white" : p.role === "ai" ? "bg-gold-600 text-white" : "bg-xuan-aged text-ink-500"}`}>
-                      {p.avatar}
-                    </div>
-                    <div className="absolute inset-0 bg-ink-900/60 flex items-center justify-center">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M16 8V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-3"/><path d="M22 12h-8"/></svg>
-                    </div>
-                  </div>
-                )}
-
-                {/* Speaking indicator */}
-                {p.isSpeaking && (
-                  <div className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gold-600/80">
-                    <div className="flex items-end gap-0.5 h-3">
-                      <div className="w-0.5 bg-white rounded-full animate-[bounce_0.6s_infinite]" style={{ height: "40%" }} />
-                      <div className="w-0.5 bg-white rounded-full animate-[bounce_0.5s_infinite_0.1s]" style={{ height: "70%" }} />
-                      <div className="w-0.5 bg-white rounded-full animate-[bounce_0.4s_infinite_0.2s]" style={{ height: "100%" }} />
-                    </div>
-                  </div>
-                )}
-
-                {/* Mic status */}
-                <div className="absolute top-2 right-2">
-                  {!p.isMicOn ? (
-                    <div className="w-5 h-5 rounded-full bg-ink-900/60 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v6a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                    </div>
-                  ) : p.isSpeaking ? (
-                    <div className="w-5 h-5 rounded-full bg-gold-600/60 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Name bar */}
-              <div className="px-2 py-1.5 bg-ink-900/90 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-white font-medium truncate">{p.name}</span>
-                  {roleBadge(p.role)}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Gallery layout: grid of video tiles (like Tencent Meeting)
-  return (
-    <div ref={videoRef} className="w-full h-full flex flex-col">
-      {/* Header toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-ink-900/95 rounded-t-xl border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-white font-medium">视频会议</span>
-          <span className="text-xs text-slate-400">{participants.length} 人</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => onLayoutChange("sidebar")} className="px-3 py-1.5 rounded-lg bg-white/5 text-slate-300 text-xs hover:bg-white/10 transition-all flex items-center gap-1.5">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>
-            边栏模式
-          </button>
-          <button className="px-3 py-1.5 rounded-lg bg-white/5 text-slate-300 text-xs hover:bg-white/10 transition-all flex items-center gap-1.5">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
-            邀请专家
-          </button>
-        </div>
-      </div>
-
-      {/* Video grid */}
-      <div className="flex-1 bg-ink-900 p-4 rounded-b-xl overflow-hidden">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 h-full">
-          {participants.map((p) => (
-            <div key={p.id} className={`relative rounded-xl overflow-hidden border-2 transition-all duration-300 ${p.isSpeaking ? "border-gold-500 shadow-lg shadow-gold-500/20" : "border-white/5"}`}>
-              <div className="absolute inset-0 bg-gradient-to-br from-ink-700 to-ink-900" />
-              
-              {/* Avatar center */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold ${p.role === "expert" ? "bg-cinnabar/20 text-cinnabar" : p.role === "ai" ? "bg-gold-600/20 text-gold-300" : "bg-white/10 text-slate-300"}`}>
-                  {p.avatar}
-                </div>
-              </div>
-
-              {/* Speaking waves */}
-              {p.isSpeaking && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-24 h-24 rounded-full border border-gold-500/30 animate-ping" />
-                  <div className="absolute w-20 h-20 rounded-full border border-gold-500/20 animate-ping" style={{ animationDelay: "0.2s" }} />
-                </div>
-              )}
-
-              {/* Bottom info bar */}
-              <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-white font-medium">{p.name}</span>
-                  {roleBadge(p.role)}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {!p.isMicOn && (
-                    <div className="w-5 h-5 rounded-full bg-black/40 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v6a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/></svg>
-                    </div>
-                  )}
-                  {!p.isCameraOn && (
-                    <div className="w-5 h-5 rounded-full bg-black/40 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M16 8V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-3"/><path d="M22 12h-8"/></svg>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Speaking badge */}
-              {p.isSpeaking && (
-                <div className="absolute top-3 left-3 px-2 py-1 rounded-full bg-gold-600/80 flex items-center gap-1">
-                  <div className="flex items-end gap-0.5 h-3">
-                    <div className="w-0.5 bg-white rounded-full animate-[bounce_0.5s_infinite]" style={{ height: "40%" }} />
-                    <div className="w-0.5 bg-white rounded-full animate-[bounce_0.4s_infinite_0.1s]" style={{ height: "70%" }} />
-                    <div className="w-0.5 bg-white rounded-full animate-[bounce_0.3s_infinite_0.2s]" style={{ height: "100%" }} />
-                  </div>
-                  <span className="text-[10px] text-white">发言中</span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Bottom control bar */}
-      <div className="mt-3 flex items-center justify-center gap-4">
-        <button className="w-12 h-12 rounded-full bg-ink-900/80 border border-white/10 flex items-center justify-center text-slate-300 hover:bg-ink-800 hover:text-white transition-all">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        </button>
-        <button className="w-12 h-12 rounded-full bg-ink-900/80 border border-white/10 flex items-center justify-center text-slate-300 hover:bg-ink-800 hover:text-white transition-all">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        </button>
-        <button className="w-12 h-12 rounded-full bg-red-500/80 border border-red-400/30 flex items-center justify-center text-white hover:bg-red-500 transition-all">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.68 13.31a6 6 0 0 0 8.76-1.66l-8.76 1.66z"/><path d="M14.31 10.68a6 6 0 0 0-8.76 1.66l8.76-1.66z"/><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9z"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        </button>
-        <button className="w-12 h-12 rounded-full bg-ink-900/80 border border-white/10 flex items-center justify-center text-slate-300 hover:bg-ink-800 hover:text-white transition-all">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </button>
-        <button className="px-4 py-2 rounded-full bg-red-600 text-white text-sm hover:bg-red-700 transition-all">
-          挂断
+        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20 hover:text-white transition-all">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
     </div>
+  );
+}
+
+function EmptyVideoState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-6 text-center">
+      <div className="w-10 h-10 rounded-full bg-ink-800 flex items-center justify-center mb-2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-500">
+          <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+      </div>
+      <p className="text-xs text-slate-500">等待加入</p>
+    </div>
+  );
+}
+
+export default function VideoConference({ participants = [] }: VideoConferenceProps) {
+  const [selectedParticipant, setSelectedParticipant] = useState<VideoParticipant | null>(null);
+
+  return (
+    <>
+      <div className="flex flex-col gap-2">
+        {participants.length === 0 ? (
+          <EmptyVideoState />
+        ) : (
+          participants.map(p => (
+            <VideoTile key={p.id} p={p} onClick={() => setSelectedParticipant(p)} />
+          ))
+        )}
+      </div>
+      {selectedParticipant && (
+        <VideoDetailModal p={selectedParticipant} onClose={() => setSelectedParticipant(null)} />
+      )}
+    </>
   );
 }

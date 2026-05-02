@@ -91,7 +91,7 @@ export default function Navigation({
                 </span>
                 {phase.label}
                 {isCurrent && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-14 h-[3px] bg-gold-600 rounded-full" />
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-14 h-[3px] bg-gold-600 rounded-full" ></span>
                 )}
               </button>
               {index < phases.length - 1 && (
@@ -99,7 +99,7 @@ export default function Navigation({
                   className={`w-6 h-px mx-1 ${
                     isCompleted ? "bg-stone-green/40" : "bg-ink-300/20"
                   }`}
-                />
+                ></div>
               )}
             </div>
           );

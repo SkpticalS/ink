@@ -3,15 +3,11 @@ import gsap from "gsap";
 
 interface LobbyPageProps {
   onEnterClassroom: () => void;
+  classrooms?: { id: number; name: string; topic: string; status: string; students: number; code: string }[];
+  user?: { name: string; avatar?: string };
 }
 
-const demoClassrooms = [
-  { id: 1, name: "宋代山水画鉴赏", topic: "探讨宋代山水画的写实与意境", status: "进行中", students: 12, code: "SONG23" },
-  { id: 2, name: "元代文人画研究", topic: "元四家艺术风格比较分析", status: "等待中", students: 5, code: "YUAN45" },
-  { id: 3, name: "中国花鸟画入门", topic: "工笔与写意技法基础", status: "进行中", students: 28, code: "BIRD78" },
-];
-
-export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
+export default function LobbyPage({ onEnterClassroom, classrooms = [], user }: LobbyPageProps) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [goal, setGoal] = useState("");
@@ -54,7 +50,7 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img src="/images/window-lattice.jpg" alt="" className="absolute top-0 left-0 w-full h-full object-cover opacity-[0.04]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-xuan-warm via-xuan-warm/95 to-xuan-white" />
+        <div className="absolute inset-0 bg-gradient-to-b from-xuan-warm via-xuan-warm/95 to-xuan-white"></div>
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-8">
@@ -87,18 +83,34 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
         <div className="lobby-anim mb-8">
           <div className="bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gold-600/10 border-2 border-gold-600/30 flex items-center justify-center text-xl text-gold-600 font-title">
-                罗
-              </div>
-              <div>
-                <p className="text-xs text-ink-400 mb-0.5">登录用户</p>
-                <p className="font-title text-xl text-ink-900 tracking-wider">罗文韬</p>
-              </div>
+              {user ? (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-gold-600/10 border-2 border-gold-600/30 flex items-center justify-center text-xl text-gold-600 font-title">
+                    {user.avatar || user.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-xs text-ink-400 mb-0.5">登录用户</p>
+                    <p className="font-title text-xl text-ink-900 tracking-wider">{user.name}</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-xuan-aged border-2 border-ink-300/20 flex items-center justify-center text-xl text-ink-400">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                  <div>
+                    <p className="text-xs text-ink-400 mb-0.5">登录用户</p>
+                    <p className="text-sm text-ink-400">请先登录</p>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="hidden md:flex items-center gap-2 text-xs text-ink-400">
-              <span className="w-2 h-2 rounded-full bg-stone-green" />
-              在线
-            </div>
+            {user && (
+              <div className="hidden md:flex items-center gap-2 text-xs text-ink-400">
+                <span className="w-2 h-2 rounded-full bg-stone-green" ></span>
+                在线
+              </div>
+            )}
           </div>
         </div>
 
@@ -169,7 +181,16 @@ export default function LobbyPage({ onEnterClassroom }: LobbyPageProps) {
               </h3>
 
               <div className="space-y-4">
-                {demoClassrooms.map((room) => (
+                {classrooms.length === 0 && (
+                  <div className="text-center py-12 bg-xuan-aged/20 rounded-card border border-gold-600/10">
+                    <div className="w-12 h-12 rounded-full bg-xuan-aged flex items-center justify-center mx-auto mb-3">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-400"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+                    </div>
+                    <p className="text-ink-500 text-sm mb-1">暂无在线教室</p>
+                    <p className="text-ink-300 text-xs">创建教室后将在此显示</p>
+                  </div>
+                )}
+                {classrooms.map((room) => (
                   <div
                     key={room.id}
                     className="relative bg-xuan-aged/30 rounded-card p-5 hover:bg-xuan-aged/50 transition-all duration-300 border border-transparent hover:border-gold-600/20 card-lift"

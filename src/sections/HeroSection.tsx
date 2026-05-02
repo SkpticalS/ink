@@ -3,10 +3,9 @@ import gsap from "gsap";
 
 export default function HeroSection({ onStart }: { onStart: () => void }) {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded] = useState(true);
 
   useEffect(() => {
-    setLoaded(true);
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: 0.4 });
       tl.fromTo(".hero-title", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out" })
@@ -105,7 +104,7 @@ export default function HeroSection({ onStart }: { onStart: () => void }) {
       </div>
 
       {/* Bottom decorative line */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-600/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-600/30 to-transparent" ></div>
     </section>
   );
 }

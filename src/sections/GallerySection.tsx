@@ -26,20 +26,20 @@ export default function GallerySection() {
     return () => ctx.revert();
   }, []);
 
+  const goTo = useCallback((index: number) => {
+    if (index === activeIndex || isTransitioning) return;
+    setIsTransitioning(true);
+    setActiveIndex(index);
+    setTimeout(() => setIsTransitioning(false), 800);
+  }, [activeIndex, isTransitioning]);
+
   // Auto-play
   useEffect(() => {
     autoPlayRef.current = setInterval(() => {
       goTo((activeIndex + 1) % galleryImages.length);
     }, 5000);
     return () => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); };
-  }, [activeIndex]);
-
-  const goTo = (index: number) => {
-    if (index === activeIndex || isTransitioning) return;
-    setIsTransitioning(true);
-    setActiveIndex(index);
-    setTimeout(() => setIsTransitioning(false), 800);
-  };
+  }, [activeIndex, goTo]);
 
   return (
     <section ref={sectionRef} className="py-20 px-4 md:px-8 bg-xuan-warm">
@@ -48,9 +48,9 @@ export default function GallerySection() {
         <h2 className="text-title text-ink-900 mb-3">艺境巡礼</h2>
         <p className="text-annotation text-ink-500 tracking-widest">一画一世界 · 一艺一境界</p>
         <div className="flex items-center justify-center gap-3 mt-4">
-          <div className="w-12 h-px bg-gold-600/40" />
-          <div className="w-2 h-2 rounded-full bg-gold-600/60" />
-          <div className="w-12 h-px bg-gold-600/40" />
+          <div className="w-12 h-px bg-gold-600/40" ></div>
+          <div className="w-2 h-2 rounded-full bg-gold-600/60" ></div>
+          <div className="w-12 h-px bg-gold-600/40" ></div>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export default function GallerySection() {
                       className="w-full h-full object-cover"
                     />
                     {/* Overlay gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-ink-900/60 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink-900/60 via-transparent to-transparent" ></div>
                     {/* Title on image */}
                     <div className="absolute bottom-6 left-6 right-6">
                       <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wider mb-1"
@@ -124,7 +124,7 @@ export default function GallerySection() {
                       alt={galleryImages[idx].title}
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-ink-900/50 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink-900/50 to-transparent" ></div>
                     <div className="absolute bottom-3 left-3">
                       <p className="text-xs text-white/90 tracking-wider">{galleryImages[idx].title}</p>
                     </div>

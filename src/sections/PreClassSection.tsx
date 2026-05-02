@@ -1,389 +1,480 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
-import { DEMO_MEMBERS } from "../lib/data";
+import type { Source } from "../lib/data";
 import GenerationDetail from "./GenerationDetail";
 
-// 10 mock search results for user to review
-const MOCK_SOURCES = [
-  { id: 1, title: "《溪山行旅图》与宋代北方山水画", source: "中国美术史研究", url: "cgtn.com", snippet: "范宽代表作以雄浑壮阔的北方山水著称，运用\"雨点皴\"表现山石质感，体现了宋代山水画的写实巅峰。", checked: true },
-  { id: 2, title: "宋代山水画空间营造与\"三远法\"", source: "艺术学研究期刊", url: "art-research.cn", snippet: "郭熙提出的\"高远、深远、平远\"三远法，成为宋代山水画构图的重要理论基石，影响后世数百年。", checked: true },
-  { id: 3, title: "北宋院体山水画的宫廷审美", source: "故宫博物院", url: "dpm.org.cn", snippet: "北宋宫廷画院制度促进了山水画的高度发展，王希孟《千里江山图》代表了青绿山水的最高成就。", checked: false },
-  { id: 4, title: "南宋\'马一角\'\'夏半边\'构图创新", source: "中央美术学院学报", url: "cafa.edu.cn", snippet: "马远、夏圭创造的边角构图打破了全景式山水传统，开启了山水画的诗意化、抒情化新境界。", checked: true },
-  { id: 5, title: "《清明上河图》中的市井山水", source: "国家博物馆", url: "chnmuseum.cn", snippet: "张择端将山水与城市景观融合，展现了北宋汴京的繁华景象，是风俗画与山水画结合的典范。", checked: false },
-  { id: 6, title: "文人画兴起与苏轼\"墨戏\"理论", source: "中国美学理论", url: "aesthetics.cn", snippet: "苏轼提出\"论画以形似，见与儿童邻\"，奠定了文人画重意境轻形似的理论基础。", checked: true },
-  { id: 7, title: "元四家：从宋法到元人笔墨", source: "艺术百科", url: "art-baike.cn", snippet: "黄公望、吴镇、倪瓒、王蒙四人承前启后，将宋代写实山水转变为元代抒情写意的新风貌。", checked: false },
-  { id: 8, title: "山水画皴法体系与地质学关联", source: "地质与文化", url: "geo-culture.cn", snippet: "不同皴法对应不同地质结构：披麻皴对应土质山，斧劈皴对应石质山，雨点皴表现北方坚硬岩石。", checked: true },
-  { id: 9, title: "\'外师造化，中得心源\'创作论", source: "中国画论研究", url: "painting-theory.cn", snippet: "张璪提出的创作理论，强调画家既要师法自然，又要融入主观情感，是中国画创作的核心法则。", checked: false },
-  { id: 10, title: "《林泉高致》——山水画论集大成", source: "古典文献", url: "classics.cn", snippet: "郭熙之子郭思整理的《林泉高致》，系统总结了北宋山水画创作理论，至今仍是研习山水画的必读经典。", checked: true },
-];
+// =============================
+// 类型定义
+// =============================
 
-// 3 perspective angles
-const PERSPECTIVES = [
-  { id: 1, title: "技法演变视角", subtitle: "从\"写实\"到\"写意\"的笔墨转型", desc: "聚焦宋代至元代山水画技法的变化，分析范宽雨点皴、郭熙卷云皴到元代披麻皴的演变脉络，探讨技法如何承载审美理想。" },
-  { id: 2, title: "空间美学视角", subtitle: "\"三远法\"与山水意境营造", desc: "从郭熙\"三远法\"出发，探讨宋代山水画如何通过构图创造深度感和意境，以及边角构图对抒情氛围的强化。" },
-  { id: 3, title: "文人精神视角", subtitle: "山水画中的士人情怀", desc: "从苏轼\"士人画\"理论切入，探讨山水画如何成为文人表达情感、寄托理想的载体，以及\"外师造化\"的创作哲学。" },
-];
+interface Perspective { id: number; title: string; description: string; icon: string; }
 
-const STEPS = ["主题选定", "选择参考资料", "选题", "大纲", "场景", "就绪"];
+interface LLMProvider {
+  id: string;
+  name: string;
+  icon: string;
+  models: { id: string; name: string; capabilities: string[] }[];
+}
+
+interface AgentConfig {
+  id: string;
+  name: string;
+  role: "teacher" | "assistant" | "student";
+  avatar: string;
+  persona: string;
+  color: string;
+}
 
 interface PreClassSectionProps {
   onComplete?: () => void;
+  sources?: Source[];
+  perspectives?: Perspective[];
+  outline?: string[];
+  onStartSearch?: (topic: string) => void;
+  onSelectSources?: (ids: number[]) => void;
+  onSelectPerspective?: (id: number) => void;
 }
 
-export default function PreClassSection({ onComplete }: PreClassSectionProps) {
+// =============================
+// 预设数据（用于预览）
+// =============================
+
+const PREVIEW_PROVIDERS: LLMProvider[] = [
+  { id: "openai", name: "OpenAI", icon: "O", models: [
+    { id: "gpt-4o", name: "GPT-4o", capabilities: ["vision", "tools", "streaming"] },
+    { id: "gpt-4o-mini", name: "GPT-4o Mini", capabilities: ["vision", "streaming"] },
+    { id: "o1-preview", name: "o1-preview", capabilities: ["reasoning"] },
+  ]},
+  { id: "anthropic", name: "Anthropic", icon: "A", models: [
+    { id: "claude-3-sonnet", name: "Claude 3 Sonnet", capabilities: ["vision", "tools", "streaming"] },
+    { id: "claude-3-haiku", name: "Claude 3 Haiku", capabilities: ["streaming"] },
+  ]},
+  { id: "google", name: "Google", icon: "G", models: [
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", capabilities: ["vision", "tools", "streaming"] },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", capabilities: ["vision", "streaming"] },
+  ]},
+  { id: "deepseek", name: "DeepSeek", icon: "D", models: [
+    { id: "deepseek-chat", name: "DeepSeek Chat", capabilities: ["streaming"] },
+    { id: "deepseek-reasoner", name: "DeepSeek Reasoner", capabilities: ["reasoning"] },
+  ]},
+];
+
+const PREVIEW_AGENTS: AgentConfig[] = [
+  { id: "t1", name: "李明德 教授", role: "teacher", avatar: "李", persona: "中央美术学院教授，专注中国山水画研究30年", color: "#C4963D" },
+  { id: "a1", name: "学术助教", role: "assistant", avatar: "助", persona: "协助组织课堂讨论，补充学术背景知识", color: "#5A7A96" },
+  { id: "s1", name: "张同学", role: "student", avatar: "张", persona: "中国画专业研究生，热爱传统绘画", color: "#6B8E6B" },
+  { id: "s2", name: "王同学", role: "student", avatar: "王", persona: "艺术史本科生，善于跨学科思考", color: "#7B6F5D" },
+];
+
+const DEMO_SOURCES: Source[] = [
+  { id: 1, title: "宋代山水画研究综述", url: "https://example.com/1", snippet: "本文系统梳理了北宋至南宋山水画的发展历程，重点分析了范宽、郭熙、马远等代表画家的艺术成就...", checked: false },
+  { id: 2, title: "《林泉高致》中的三远法", url: "https://example.com/2", snippet: "郭熙在《林泉高致》中提出的“高远、深远、平远”三种构图法则，是中国山水画理论的重要基石...", checked: false },
+  { id: 3, title: "台北故宫藏范宽《溪山行旅图》鉴赏", url: "https://example.com/3", snippet: "范宽的传世名作《溪山行旅图》以雄健的笔法和雨点皴技法，展现了北方山水的雄浑气势...", checked: false },
+  { id: 4, title: "边角构图：南宋绘画的审美转向", url: "https://example.com/4", snippet: "马远、夏圭开创的“一角半边”构图范式，打破了北宋全景式构图传统，体现了南宋文人新的审美追求...", checked: false },
+  { id: 5, title: "中国绘画史：宋元卷", url: "https://example.com/5", snippet: "该书以时间为线索，系统论述了宋代绘画从院体画到文人画的转变过程，对理解宋代山水画有重要参考价值...", checked: false },
+];
+
+const DEMO_PERSPECTIVES: Perspective[] = [
+  { id: 1, title: "从技法视角切入", description: "聚焦“雨点皴”、“卷云皴”等具体笔墨技法的发展演变，适合有一定绘画基础的学生", icon: "技" },
+  { id: 2, title: "从空间构图视角切入", description: "以郭熙“三远法”为核心，探讨宋代山水画的空间叙事逻辑，适合理论研究方向", icon: "构" },
+  { id: 3, title: "从审美转向视角切入", description: "对比北宋全景式构图与南宋边角构图，分析政治环境对艺术风格的影响，适合跨学科研究", icon: "美" },
+];
+
+const DEMO_OUTLINE = [
+  "第一章：宋代山水画概述（960-1279）",
+  "第二章：范宽与《溪山行旅图》",
+  "第三章：郭熙与“三远法”构图理论",
+  "第四章：边角构图：马远与夏圭",
+  "第五章：北宋与南宋山水画审美比较",
+  "第六章：课堂讨论与创作实践",
+];
+
+// =============================
+// 步骤常量
+// =============================
+
+const STEPS = ["探讨主题", "搜索资料", "选择视角", "课件大纲", "课件预览", "课件生成"];
+
+// =============================
+// 蓝紫色弹窗公共样式
+// =============================
+
+const panelBase = "rounded-xl overflow-hidden shadow-2xl border border-white/10";
+const panelGradient = "bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4c1d95]";
+
+// =============================
+// 空状态组件
+// =============================
+function EmptyState({ icon, title, subtitle }: { icon: JSX.Element; title: string; subtitle: string }) {
+  return (
+    <div className="text-center py-16">
+      <div className="w-14 h-14 rounded-full bg-xuan-aged flex items-center justify-center mx-auto mb-3">{icon}</div>
+      <p className="text-ink-500 text-sm mb-1">{title}</p>
+      <p className="text-ink-300 text-xs">{subtitle}</p>
+    </div>
+  );
+}
+
+// =============================
+// 主组件
+// =============================
+export default function PreClassSection({
+  onComplete,
+  sources: propSources = [],
+  perspectives: propPerspectives = [],
+  outline: propOutline = [],
+  onStartSearch,
+}: PreClassSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  // Core states
-  const [title, setTitle] = useState("宋代山水画");
-  const [desc, setDesc] = useState("学习并了解宋代山水画的历史");
-  const [topic, setTopic] = useState("让学生了解并掌握宋代山水画历史");
-
-  // Workflow phase
+  // ===== 阶段状态 =====
   const [phase, setPhase] = useState<"info" | "searching" | "review" | "perspective" | "outline" | "ready">("info");
-  const [stepIndex, setStepIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState([{ id: 1, type: "system", content: "等待房主开始生成课程内容。" }]);
+  const [currentStep, setCurrentStep] = useState(0);
 
-  // Sources & review
-  const [sources, setSources] = useState(MOCK_SOURCES);
-  const [selectAll, setSelectAll] = useState(false);
+  // ===== 主题输入 =====
+  const [topic, setTopic] = useState("");
 
-  // Perspectives
-  const [literatureReview, setLiteratureReview] = useState("");
+  // ===== 参考资料 =====
+  const [sources, setSources] = useState<Source[]>(propSources);
+  const [selectedSources, setSelectedSources] = useState<Set<number>>(new Set());
+
+  // ===== 选题 =====
+  const [perspectives, setPerspectives] = useState<Perspective[]>(propPerspectives);
   const [selectedPerspective, setSelectedPerspective] = useState<number | null>(null);
 
-  // Outline
-  const [outline, setOutline] = useState<string[]>([]);
+  // ===== 大纲 =====
+  const [outline, setOutline] = useState<string[]>(propOutline);
+  const [showGenerationDetail, setShowGenerationDetail] = useState(false);
 
+  // ===== LLM 模型弹窗 =====
+  const [showModelPanel, setShowModelPanel] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<LLMProvider | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<string>("");
+
+  // ===== Agent 弹窗 =====
+  const [showAgentPanel, setShowAgentPanel] = useState(false);
+  const [agentMode, setAgentMode] = useState<"preset" | "auto">("preset");
+  const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>(["t1"]);
+  const [maxTurns, setMaxTurns] = useState(5);
+  const [agents] = useState<AgentConfig[]>(PREVIEW_AGENTS);
+
+  // ===== 附件 =====
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [webSearch, setWebSearch] = useState(true);
+
+  // ===== GSAP 动画 =====
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.utils.toArray<HTMLElement>(".pre-anim").forEach((el, i) => {
-        gsap.fromTo(el, { y: 40, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.7, delay: i * 0.08, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 92%", once: true } }
-        );
+        gsap.fromTo(el, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, delay: i * 0.08, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 88%", once: true } });
       });
     }, sectionRef);
     return () => ctx.revert();
   }, [phase]);
 
-  // Toggle source checkbox
-  const toggleSource = (id: number) => {
-    setSources(prev => prev.map(s => s.id === id ? { ...s, checked: !s.checked } : s));
-  };
+  // ===== 开发者：自动填写 =====
+  const handleAutoFill = useCallback(() => {
+    setTopic("宋代山水画中的写实主义传统");
+  }, []);
 
-  const handleSelectAll = () => {
-    const newState = !selectAll;
-    setSelectAll(newState);
-    setSources(prev => prev.map(s => ({ ...s, checked: newState })));
-  };
+  const handleSkipPhase = useCallback(() => {
+    if (phase === "info") { setPhase("searching"); setCurrentStep(1); setTimeout(() => { setPhase("review"); setCurrentStep(1); }, 500); }
+    else if (phase === "searching") { setPhase("review"); setCurrentStep(1); }
+    else if (phase === "review") { setPhase("perspective"); setCurrentStep(2); }
+    else if (phase === "perspective") { setPhase("outline"); setCurrentStep(3); }
+    else if (phase === "outline") { setPhase("ready"); setCurrentStep(5); setShowGenerationDetail(true); }
+  }, [phase]);
 
-  const checkedCount = sources.filter(s => s.checked).length;
+  // ===== 开发者：填充假数据 =====
+  const handleLoadDemoData = useCallback(() => {
+    setSources(DEMO_SOURCES);
+    setPerspectives(DEMO_PERSPECTIVES);
+    setOutline(DEMO_OUTLINE);
+  }, []);
 
-  // Start searching
+  // ===== 事件处理 =====
   const handleStartSearch = () => {
     setPhase("searching");
-    setStepIndex(1);
-    setProgress(15);
-    setLogs(prev => [...prev, { id: prev.length + 1, type: "model", content: "已开启检索，系统会先查找相关依据，再组织课程内容。" }]);
-
-    // Simulate search delay
-    setTimeout(() => {
-      setPhase("review");
-      setProgress(30);
-      setLogs(prev => [...prev, { id: prev.length + 1, type: "system", content: `联网检索完成，已找到${MOCK_SOURCES.length}个结果。` }]);
-    }, 2500);
+    setCurrentStep(1);
+    onStartSearch?.(topic);
   };
 
-  // Confirm sources, generate review + perspectives
-  const handleConfirmSources = () => {
-    setPhase("perspective");
-    setStepIndex(2);
-    setProgress(50);
-    setLogs(prev => [...prev, { id: prev.length + 1, type: "model", content: `已确认${checkedCount}条参考资料，正在生成文献综述...` }]);
-
-    // Generate literature review
-    setLiteratureReview("基于选取的文献资料，宋代山水画研究呈现出三个主要脉络：一是以范宽、郭熙为代表的北方写实传统，强调\"外师造化\"的自然观察；二是以苏轼、米芾为核心的文人画理论建构，追求\"中得心源\"的精神表达；三是从全景式构图到边角式构图的形式演变，体现了审美趣味从雄浑壮阔向诗意抒情转变的历史轨迹。");
-
-    setLogs(prev => [...prev, { id: prev.length + 1, type: "system", content: "文献综述生成完成，已提取3个选题视角。" }]);
+  const toggleSource = (id: number) => {
+    setSelectedSources(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
-  // Select perspective & generate outline
-  const handleSelectPerspective = (id: number) => {
-    setSelectedPerspective(id);
+  const handleReviewComplete = () => { setPhase("perspective"); setCurrentStep(2); };
+  const handleSelectPerspective = (id: number) => { setSelectedPerspective(id); setPhase("outline"); setCurrentStep(3); };
+  const handleOutlineConfirm = () => { setPhase("ready"); setCurrentStep(5); setShowGenerationDetail(true); };
+
+  // ===== LLM 模型选择 =====
+  const handleSelectProvider = (provider: LLMProvider) => { setSelectedProvider(provider); };
+  const handleSelectModel = (providerId: string, modelId: string) => {
+    setSelectedModelId(`${providerId}:${modelId}`);
+    setSelectedProvider(null);
+    setShowModelPanel(false);
   };
 
-  const handleGenerateOutline = () => {
-    if (!selectedPerspective) return;
-    setPhase("outline");
-    setStepIndex(3);
-    setProgress(70);
-    setLogs(prev => [...prev, { id: prev.length + 1, type: "model", content: `已选择视角"${PERSPECTIVES.find(p => p.id === selectedPerspective)?.title}"，正在生成大纲...` }]);
-
-    // Mock outline based on selected perspective
-    const outlines: Record<number, string[]> = {
-      1: ["第一章 宋代写实传统：范宽与北方山水", "第二章 郭熙三远法与卷云皴", "第三章 元代转型：从写实到写意", "第四章 披麻皴与文人笔墨"],
-      2: ["第一章 郭熙三远法的空间美学", "第二章 全景式构图的深度营造", "第三章 边角构图：马远夏圭的诗意革新", "第四章 留白与意境：空间美学的哲学基础"],
-      3: ["第一章 苏轼\"士人画\"理论的提出", "第二章 \"外师造化，中得心源\"创作论", "第三章 山水画中的隐逸情怀", "第四章 元代文人画的理想寄托"],
-    };
-    setOutline(outlines[selectedPerspective] || []);
-
-    setTimeout(() => {
-      setPhase("ready");
-      setStepIndex(5);
-      setProgress(100);
-      setLogs(prev => [...prev, { id: prev.length + 1, type: "system", content: "课程大纲生成完成，课堂准备就绪！" }]);
-    }, 1500);
+  // ===== Agent 选择 =====
+  const toggleAgent = (id: string) => {
+    if (id === "t1") return; // 教师不可取消
+    setSelectedAgentIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
+
+  // ===== 获取当前模型显示文本 =====
+  const getModelDisplay = () => {
+    if (!selectedModelId) return null;
+    const [pid, mid] = selectedModelId.split(":");
+    const p = PREVIEW_PROVIDERS.find(pr => pr.id === pid);
+    const m = p?.models.find(mo => mo.id === mid);
+    return { provider: p?.name || pid, model: m?.name || mid };
+  };
+
+  const modelDisplay = getModelDisplay();
+
+  // ===== 获取选中的 Agent =====
+  const selectedAgents = agents.filter(a => selectedAgentIds.includes(a.id));
+
+  // ===== pill 样式 =====
+  const pillMuted = "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer select-none whitespace-nowrap border border-white/10 text-slate-400 hover:text-white hover:bg-white/5";
+  const pillActive = "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer select-none whitespace-nowrap border border-violet-300/40 bg-violet-500/10 text-violet-300";
 
   return (
     <div ref={sectionRef} className="relative min-h-screen py-20 px-4 md:px-8 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <img src="/images/plum-blossom.jpg" alt="" className="w-full h-full object-cover opacity-[0.04]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-xuan-white via-transparent to-xuan-white" />
+        <img src="/images/palace-ceiling.jpg" alt="" className="w-full h-full object-cover opacity-[0.04]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-xuan-white via-transparent to-xuan-white"></div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto space-y-6">
-        {/* ====== HEADER BAR ====== */}
-        <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-5 shadow-paper border border-gold-600/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="font-title text-2xl text-ink-900 tracking-wider mb-1">{title}</h2>
-            <div className="flex items-center gap-2 text-sm text-ink-400">
-              <span>教室状态：</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs ${phase === "ready" ? "bg-stone-green/15 text-stone-green" : phase !== "info" ? "bg-gold-100 text-gold-600" : "bg-xuan-aged text-ink-500"}`}>
-                {phase === "ready" ? "就绪" : phase === "info" ? "waiting" : "生成中"}
-              </span>
-              <span className="text-ink-300">|</span>
-              <span>已连接到在线课堂服务器</span>
-            </div>
+      <div className="relative z-10 max-w-5xl mx-auto">
+        {/* Title */}
+        <div className="text-center mb-8 pre-anim">
+          <div className="inline-flex items-center gap-4 mb-4">
+            <div className="w-16 h-px bg-gradient-to-r from-transparent to-gold-600/40"></div><div className="w-3 h-3 rounded-full bg-gold-600/60"></div><div className="w-16 h-px bg-gradient-to-l from-transparent to-gold-600/40"></div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-4 py-2 bg-xuan-aged/60 rounded-card border border-gold-600/10">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-600"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              <span className="text-sm text-ink-500">邀请码：</span>
-              <span className="text-sm font-mono font-semibold text-gold-600 tracking-wider">YUFUXTPB</span>
-            </div>
+          <h2 className="font-title text-ink-900 mb-2">课前准备</h2>
+          <p className="font-annotation text-ink-500 tracking-[0.15em]">格物致知 · 厚积薄发</p>
+        </div>
+
+        {/* Steps */}
+        <div className="pre-anim mb-8">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            {STEPS.map((s, i) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all whitespace-nowrap ${i <= currentStep ? "border-gold-600 text-gold-600 bg-gold-100/20" : "border-ink-300/30 text-ink-400"}`}>{i + 1}. {s}</div>
+                {i < STEPS.length - 1 && <div className={`w-4 h-px ${i < currentStep ? "bg-gold-600" : "bg-ink-300/30"}`}></div>}
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* ====== LEFT COLUMN ====== */}
-          <div className="lg:col-span-7 space-y-6">
+        {/* ===== 开发者工具栏 ===== */}
+        <div className="pre-anim mb-4 flex items-center justify-end gap-2">
+          <button onClick={handleAutoFill} className="px-3 py-1.5 rounded-btn text-xs bg-gold-600/10 text-gold-600 border border-gold-600/20 hover:bg-gold-600 hover:text-white transition-all">自动填写</button>
+          <button onClick={handleLoadDemoData} className="px-3 py-1.5 rounded-btn text-xs bg-violet-600/10 text-violet-400 border border-violet-600/20 hover:bg-violet-600 hover:text-white transition-all">加载假数据</button>
+          <button onClick={handleSkipPhase} className="px-3 py-1.5 rounded-btn text-xs bg-xuan-aged text-ink-500 border border-ink-300/20 hover:border-cinnabar hover:text-cinnabar transition-all">跳过阶段</button>
+        </div>
 
-            {/* Phase: INFO - Classroom Info + Topic */}
-            {phase === "info" && (
+        {/* ===== 主体内容 ===== */}
+        {phase === "info" && (
+          <div className="pre-anim">
+            {/* 探讨主题输入区 — RoomRequirementComposer 风格 */}
+            <div className="bg-xuan-white/95 backdrop-blur-sm rounded-2xl border border-gold-600/15 shadow-xl p-6 relative">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-medium text-ink-400/70">探讨主题</span>
+                {/* AgentBar 悬浮触发 */}
+                <button
+                  onClick={() => setShowAgentPanel(true)}
+                  className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs transition-all hover:bg-white/5"
+                >
+                  <span className="text-slate-300 hidden sm:inline">课堂角色配置</span>
+                  <div className="flex items-center -space-x-1.5">
+                    {selectedAgents.slice(0, 3).map(a => (
+                      <div key={a.id} className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white/20" style={{ backgroundColor: a.color + "30", color: a.color }}>{a.avatar}</div>
+                    ))}
+                    {selectedAgents.length > 3 && (
+                      <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-[10px] text-slate-400 font-bold">+{selectedAgents.length - 3}</div>
+                    )}
+                  </div>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+
+              {/* Textarea */}
+              <textarea
+                value={topic}
+                onChange={e => setTopic(e.target.value)}
+                placeholder="描述本次课程的主题、目标、限制条件以及教学重点..."
+                className="w-full min-h-[120px] max-h-[240px] resize-none border-0 bg-transparent text-sm leading-relaxed text-ink-900 outline-none placeholder:text-ink-300 mb-4"
+              />
+
+              {/* 底部 Toolbar */}
+              <div className="flex items-end gap-2 flex-wrap">
+                {/* 左侧 pills */}
+                <div className="flex items-center gap-1.5 flex-1 flex-wrap">
+                  {/* 模型选择 Pill */}
+                  <button onClick={() => setShowModelPanel(true)} className={modelDisplay ? pillActive : pillMuted} title={modelDisplay ? `${modelDisplay.provider} / ${modelDisplay.model}` : "选择模型服务商"}>
+                    {modelDisplay ? (
+                      <>
+                        <span className="w-4 h-4 rounded-sm bg-violet-500/30 flex items-center justify-center text-[10px] text-violet-300">{modelDisplay.provider.charAt(0)}</span>
+                        <span className="truncate max-w-[100px]">{modelDisplay.model}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                        <span>配置模型</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* 分隔线 */}
+                  <div className="w-px h-4 bg-ink-300/30 mx-0.5"></div>
+
+                  {/* PDF Pill */}
+                  <button
+                    className={pdfFile ? pillActive : pillMuted}
+                    onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.accept = '.pdf'; input.onchange = (e: Event) => setPdfFile((e.target as HTMLInputElement).files?.[0] || null); input.click(); }}
+                    title={pdfFile ? pdfFile.name : "上传PDF"}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    {pdfFile ? pdfFile.name.slice(0, 8) + "..." : "PDF"}
+                    {pdfFile && <span onClick={e => { e.stopPropagation(); setPdfFile(null); }} className="ml-0.5 hover:text-red-400"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
+                  </button>
+
+                  {/* 网络搜索 Pill */}
+                  <button onClick={() => setWebSearch(!webSearch)} className={webSearch ? pillActive : pillMuted}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    联网搜索
+                  </button>
+
+                  {/* RAGFlow Pill */}
+                  <button className={pillMuted}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    RAGFlow
+                  </button>
+
+                  {/* 语言 Pill */}
+                  <button className={pillMuted}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    中文
+                  </button>
+
+                  {/* 分隔线 */}
+                  <div className="w-px h-4 bg-ink-300/30 mx-0.5"></div>
+
+                  {/* Media: TTS / ASR */}
+                  <button className={pillMuted}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    TTS
+                  </button>
+                  <button className={pillMuted}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                    ASR
+                  </button>
+                </div>
+
+                {/* 右侧：语音 + 发送 */}
+                <div className="flex items-center gap-2">
+                  <button className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all" title="语音输入">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                  </button>
+                  <button
+                    onClick={handleStartSearch}
+                    disabled={!topic.trim()}
+                    className={`px-4 py-2 rounded-btn flex items-center gap-1.5 text-sm font-medium transition-all ${topic.trim() ? "bg-cinnabar text-white hover:bg-cinnabar/90 seal-btn" : "bg-xuan-aged text-ink-300 cursor-not-allowed"}`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+                    开始生成
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== 其他阶段（保持不变 + 开发者跳过按钮） ===== */}
+        {phase !== "info" && (
+          <div className="pre-anim flex items-center justify-end gap-2 mb-4">
+            <button onClick={handleSkipPhase} className="px-3 py-1.5 rounded-btn text-xs bg-xuan-aged text-ink-500 border border-ink-300/20 hover:border-cinnabar hover:text-cinnabar transition-all">跳过阶段 →</button>
+          </div>
+        )}
+
+        {phase === "searching" && (
+          <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-8 shadow-paper border border-gold-600/10 text-center">
+            <div className="w-12 h-12 rounded-full bg-gold-600/10 border-2 border-gold-600/30 flex items-center justify-center mx-auto mb-4">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-600 animate-spin"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <p className="text-ink-700 mb-2">正在检索资料...</p>
+            <p className="text-ink-400 text-sm">联网搜索 + 知识库检索中，请稍候</p>
+            <button onClick={() => { setPhase("review"); setCurrentStep(1); }} className="mt-6 px-6 py-2 bg-gold-600/10 text-gold-600 rounded-btn text-sm hover:bg-gold-600 hover:text-white transition-all">模拟：检索完成</button>
+          </div>
+        )}
+
+        {phase === "review" && (
+          <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
+            <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider"><span className="w-1 h-5 bg-gold-600 rounded-full"></span>选择参考资料</h3>
+            {sources.length === 0 ? (
+              <EmptyState icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-400"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>} title="暂无检索结果" subtitle="点击「开始检索」后将显示联网搜索和知识库检索结果" />
+            ) : (
               <>
-                <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                  <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
-                    <span className="w-1 h-5 bg-gold-600 rounded-full" />教室信息
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm text-ink-500 mb-2">教室标题</label>
-                      <div className="ink-input"><input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-transparent py-2.5 text-ink-900 outline-none" /></div>
+                <div className="space-y-3 mb-6">
+                  {sources.map(s => (
+                    <div key={s.id} onClick={() => toggleSource(s.id)} className={`p-4 rounded-card border-2 cursor-pointer transition-all flex items-start gap-3 ${selectedSources.has(s.id) ? "border-gold-600 bg-gold-100/20" : "border-transparent bg-xuan-aged/30 hover:bg-xuan-aged/50"}`}>
+                      <div className={`flex-shrink-0 w-5 h-5 rounded border-2 mt-0.5 flex items-center justify-center transition-all ${selectedSources.has(s.id) ? "bg-gold-600 border-gold-600" : "border-ink-300"}`}>{selectedSources.has(s.id) && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-ink-900 font-medium mb-1">{s.title}</p>
+                        <p className="text-xs text-ink-400 mb-1.5 line-clamp-2">{s.snippet}</p>
+                        <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-xs text-gold-600 hover:underline">{s.url}</a>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm text-ink-500 mb-2">教室简介</label>
-                      <div className="ink-input"><textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2} className="w-full bg-transparent py-2.5 text-ink-900 outline-none resize-none" /></div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-
-                <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-chapter text-lg text-ink-900 tracking-wider">探讨主题</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-ink-400">准备好一起学习了吗？</span>
-                      {DEMO_MEMBERS.slice(0, 3).map(m => (
-                        <div key={m.id} className="w-8 h-8 rounded-full bg-gold-600/10 border border-gold-600/30 flex items-center justify-center text-xs text-gold-600 font-bold">{m.avatar}</div>
-                      ))}
-                    </div>
-                  </div>
-                  <textarea
-                    value={topic}
-                    onChange={e => setTopic(e.target.value)}
-                    rows={3}
-                    className="w-full bg-xuan-aged/20 rounded-card p-4 text-ink-900 outline-none focus:bg-xuan-aged/40 transition-colors resize-none border border-transparent focus:border-gold-600/20 mb-4"
-                  />
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-2">
-                      <button className="px-3 py-2 bg-gold-600/10 text-gold-600 rounded-btn text-sm border border-gold-600/20 hover:bg-gold-600 hover:text-white transition-all flex items-center gap-1.5">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                        配置模型
-                      </button>
-                      <button className="p-2 rounded-btn border border-ink-300/20 text-ink-500 hover:border-gold-600 hover:text-gold-600 transition-all" title="上传附件">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                      </button>
-                      <button className="p-2 rounded-btn border border-ink-300/20 text-ink-500 hover:border-gold-600 hover:text-gold-600 transition-all" title="联网检索">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
-                      </button>
-                      <button className="px-2.5 py-2 rounded-btn border border-ink-300/20 text-ink-500 hover:border-gold-600 hover:text-gold-600 transition-all flex items-center gap-1 text-sm">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                        中文
-                      </button>
-                      <button className="px-2.5 py-2 rounded-btn border border-violet-300/30 text-violet-500 hover:bg-violet-50 transition-all flex items-center gap-1 text-sm" title="语音合成 / 语音识别">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 rounded-btn border border-ink-300/20 text-ink-500 hover:border-cinnabar hover:text-cinnabar transition-all" title="语音输入">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                      </button>
-                      <button onClick={handleStartSearch} className="px-5 py-2.5 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2 hover:bg-cinnabar/90 transition-all">
-                        开始检索
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <button onClick={handleReviewComplete} disabled={selectedSources.size === 0} className="w-full py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter disabled:opacity-40 disabled:cursor-not-allowed">已选 {selectedSources.size} 条 · 进入选题</button>
               </>
             )}
+          </div>
+        )}
 
-            {/* Phase: SEARCHING */}
-            {phase === "searching" && (
-              <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-10 shadow-paper border border-gold-600/10 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gold-600/10 flex items-center justify-center">
-                  <div className="w-8 h-8 border-3 border-gold-600/30 border-t-gold-600 rounded-full animate-spin" />
-                </div>
-                <h3 className="font-title text-xl text-ink-900 mb-2 tracking-wider">正在检索资料...</h3>
-                <p className="text-sm text-ink-500">系统正在联网搜索相关文献和资料</p>
-                <div className="mt-6 h-2 bg-xuan-aged rounded-full overflow-hidden max-w-md mx-auto">
-                  <div className="h-full bg-gradient-to-r from-gold-600 to-gold-400 rounded-full animate-pulse" style={{ width: "60%" }} />
-                </div>
-              </div>
-            )}
-
-            {/* Phase: REVIEW - 10 Sources with checkboxes */}
-            {(phase === "review" || phase === "perspective" || phase === "outline" || phase === "ready") && (
-              <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-chapter text-lg text-ink-900 flex items-center gap-2 tracking-wider">
-                    <span className="w-1 h-5 bg-gold-600 rounded-full" />
-                    课前资料与选题
-                  </h3>
-                  <span className="text-xs text-ink-400">联网检索结果，已找到{sources.length}个结果</span>
-                </div>
-
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <div className="flex items-center gap-2">
-                    <button onClick={handleSelectAll} className="flex items-center gap-2 text-sm text-ink-500 hover:text-gold-600 transition-colors">
-                      <div className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-all ${selectAll ? "bg-gold-600 border-gold-600" : "border-ink-300"}`}>
-                        {selectAll && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
-                      </div>
-                      全选
-                    </button>
-                    <span className="text-xs text-ink-400">已选 {checkedCount} / {sources.length} 条</span>
-                  </div>
-                  <span className="text-xs text-ink-400">网络资源</span>
-                </div>
-
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                  {sources.map((source) => (
-                    <div
-                      key={source.id}
-                      onClick={() => toggleSource(source.id)}
-                      className={`relative p-4 rounded-card border-2 cursor-pointer transition-all duration-300 ${source.checked ? "border-gold-600/40 bg-gold-100/30" : "border-transparent bg-xuan-aged/30 hover:bg-xuan-aged/50"}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`flex-shrink-0 w-5 h-5 rounded-sm border-2 flex items-center justify-center mt-0.5 transition-all ${source.checked ? "bg-gold-600 border-gold-600" : "border-ink-300"}`}>
-                          {source.checked && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <h4 className={`text-sm font-semibold truncate ${source.checked ? "text-ink-900" : "text-ink-600"}`}>{source.title}</h4>
-                            <span className="flex-shrink-0 text-xs text-gold-600 hover:text-gold-700 flex items-center gap-1 cursor-pointer">
-                              在线阅读<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                            </span>
-                          </div>
-                          <p className="text-xs text-ink-400 mt-1">来源：{source.source} · {source.url}</p>
-                          <p className="text-xs text-ink-500 mt-1.5 leading-relaxed">{source.snippet}</p>
-                        </div>
-                      </div>
+        {phase === "perspective" && (
+          <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
+            <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider"><span className="w-1 h-5 bg-gold-600 rounded-full"></span>选择选题视角</h3>
+            {perspectives.length === 0 ? (
+              <EmptyState icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-400"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>} title="暂无选题视角" subtitle="AI 将基于参考资料生成多个选题方向" />
+            ) : (
+              <div className="space-y-4">
+                {perspectives.map(p => (
+                  <button key={p.id} onClick={() => handleSelectPerspective(p.id)} className={`w-full text-left p-5 rounded-card border-2 transition-all ${selectedPerspective === p.id ? "border-gold-600 bg-gold-100/20 shadow-md" : "border-transparent bg-xuan-aged/30 hover:bg-xuan-aged/50 hover:border-gold-600/30"}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="w-10 h-10 rounded-full bg-gold-600/10 text-gold-600 flex items-center justify-center text-lg">{p.icon}</span>
+                      <h4 className="font-chapter text-base text-ink-900">{p.title}</h4>
                     </div>
-                  ))}
-                </div>
-
-                {phase === "review" && (
-                  <div className="mt-5 flex justify-end">
-                    <button
-                      onClick={handleConfirmSources}
-                      disabled={checkedCount === 0}
-                      className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2 disabled:opacity-50"
-                    >
-                      确认选题<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </button>
-                  </div>
-                )}
+                    <p className="text-sm text-ink-500 ml-[52px]">{p.description}</p>
+                  </button>
+                ))}
               </div>
             )}
+          </div>
+        )}
 
-            {/* Phase: PERSPECTIVE - Literature review + 3 perspectives */}
-            {(phase === "perspective" || phase === "outline" || phase === "ready") && (
-              <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-                <h3 className="font-chapter text-lg text-ink-900 mb-4 flex items-center gap-2 tracking-wider">
-                  <span className="w-1 h-5 bg-gold-600 rounded-full" />
-                  文献综述与选题视角
-                </h3>
-
-                {/* Literature review */}
-                <div className="bg-xuan-aged/30 rounded-card p-5 mb-6 border-l-3 border-gold-600">
-                  <h4 className="text-sm font-semibold text-ink-700 mb-2 flex items-center gap-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-600"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    文献综述
-                  </h4>
-                  <p className="text-sm text-ink-600 leading-relaxed">{literatureReview}</p>
-                </div>
-
-                {/* 3 Perspectives */}
-                <p className="text-sm text-ink-500 mb-3">请选择一个选题视角，系统将据此生成课程大纲：</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {PERSPECTIVES.map((p) => (
-                    <div
-                      key={p.id}
-                      onClick={() => handleSelectPerspective(p.id)}
-                      className={`relative p-5 rounded-card border-2 cursor-pointer transition-all duration-300 card-lift ${selectedPerspective === p.id ? "border-gold-600 bg-gold-100/30 shadow-md" : "border-transparent bg-xuan-aged/30 hover:bg-xuan-aged/50 hover:border-gold-600/20"}`}
-                    >
-                      {selectedPerspective === p.id && (
-                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-gold-600 text-white flex items-center justify-center">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                        </div>
-                      )}
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold mb-3 ${selectedPerspective === p.id ? "bg-gold-600 text-white" : "bg-gold-600/10 text-gold-600"}`}>
-                        {["一", "二", "三"][p.id - 1]}
-                      </div>
-                      <h5 className="font-chapter text-base text-ink-900 mb-1 tracking-wider">{p.title}</h5>
-                      <p className="text-xs text-gold-600 mb-2">{p.subtitle}</p>
-                      <p className="text-xs text-ink-500 leading-relaxed">{p.desc}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {phase === "perspective" && (
-                  <div className="mt-5 flex justify-end">
-                    <button
-                      onClick={handleGenerateOutline}
-                      disabled={!selectedPerspective}
-                      className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2 disabled:opacity-50"
-                    >
-                      下一步：生成大纲<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Phase: OUTLINE - now includes generation detail */}
-            {(phase === "outline" || phase === "ready") && (
-              <>
-                {/* Generation Pipeline Detail (蓝紫色系) */}
-                <GenerationDetail />
-
-                <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10 mt-6">
-                  <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
-                    <span className="w-1 h-5 bg-gold-600 rounded-full" />
-                    课程大纲
-                  </h3>
+        {(phase === "outline" || phase === "ready") && (
+          <>
+            {showGenerationDetail && <GenerationDetail />}
+            <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10 mt-6">
+              <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider"><span className="w-1 h-5 bg-gold-600 rounded-full"></span>课程大纲</h3>
+              {outline.length === 0 ? (
+                <EmptyState icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>} title="暂无课程大纲" subtitle="选题确定后，AI 将自动生成课程大纲" />
+              ) : (
+                <>
                   <div className="space-y-3">
                     {outline.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-3 p-4 bg-xuan-aged/30 rounded-card hover:bg-xuan-aged/50 transition-all border-l-3 border-gold-600/40">
@@ -392,153 +483,194 @@ export default function PreClassSection({ onComplete }: PreClassSectionProps) {
                       </div>
                     ))}
                   </div>
-                  {phase === "ready" && (
-                    <div className="mt-5 p-4 bg-stone-green/10 rounded-card border border-stone-green/20 text-center">
-                      <p className="text-sm text-stone-green font-semibold flex items-center justify-center gap-2">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        课件生成完成！可以开始上课了
-                      </p>
-                    </div>
+                  {phase === "outline" && (
+                    <button onClick={handleOutlineConfirm} className="mt-5 w-full py-3 bg-gold-600 text-white rounded-btn tracking-wider font-chapter flex items-center justify-center gap-2 hover:bg-gold-700 transition-all">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>确认大纲，生成课件
+                    </button>
                   )}
-                </div>
-              </>
-            )}
-
-            {/* Ready banner */}
-            {phase === "ready" && (
-              <div className="pre-anim chinese-frame shadow-frame">
-                <div className="chinese-frame-inner aspect-[21/9] relative overflow-hidden">
-                  <img src="/images/study-room.jpg" alt="" className="w-full h-full object-cover opacity-50" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-ink-900/60 via-ink-900/30 to-transparent flex items-center">
-                    <div className="px-8">
-                      <p className="text-gold-300 text-xs tracking-[0.2em] mb-2">READY TO START</p>
-                      <p className="font-title text-2xl text-white tracking-wider mb-3">一切准备就绪</p>
-                      <p className="text-sm text-white/70 mb-4">课程大纲已生成 · 参考资料已确认 · 选题视角已选定</p>
+                  {phase === "ready" && (
+                    <div className="mt-5 space-y-3">
+                      <div className="p-4 bg-stone-green/10 rounded-card border border-stone-green/20 text-center">
+                        <p className="text-sm text-stone-green font-semibold flex items-center justify-center gap-2">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>课件生成完成
+                        </p>
+                      </div>
                       {onComplete && (
-                        <button
-                          onClick={onComplete}
-                          className="px-8 py-3 bg-cinnabar text-white rounded-btn seal-btn tracking-wider font-chapter flex items-center gap-2 hover:bg-cinnabar/90 transition-all"
-                        >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                          开始课堂
+                        <button onClick={onComplete} className="w-full py-3 bg-cinnabar text-white rounded-btn tracking-wider font-chapter flex items-center justify-center gap-2 hover:bg-cinnabar/90 transition-all seal-btn">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>开始课堂
                         </button>
                       )}
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+                  )}
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </div>
 
-          {/* ====== RIGHT COLUMN ====== */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* Progress Panel */}
-            <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-              <h3 className="font-chapter text-lg text-ink-900 mb-5 flex items-center gap-2 tracking-wider">
-                <span className="w-1 h-5 bg-gold-600 rounded-full" />
-                课堂准备状态
+      {/* =============================
+          LLM 模型选择弹窗 — 蓝紫色调
+          ============================= */}
+      {showModelPanel && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center" onClick={() => setShowModelPanel(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div className={`relative ${panelBase} ${panelGradient} w-full max-w-md mx-4 max-h-[80vh] flex flex-col`} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-white font-semibold text-sm">
+                {selectedProvider ? (
+                  <button onClick={() => setSelectedProvider(null)} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                    {selectedProvider.name}
+                  </button>
+                ) : "选择模型服务商"}
               </h3>
+              <button onClick={() => setShowModelPanel(false)} className="w-7 h-7 rounded-full hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
 
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-sm font-semibold text-ink-700">
-                    {phase === "info" ? "等待开始生成" : phase === "searching" ? "正在检索中..." : phase === "review" ? "等待确认参考资料" : phase === "perspective" ? "等待选择选题视角" : phase === "outline" ? "正在生成大纲..." : "课程准备完成"}
-                  </p>
-                  <p className="text-xs text-ink-400 mt-0.5">
-                    {phase === "info" ? "点击开始检索启动课前准备流程" : phase === "ready" ? "所有步骤已完成" : "正在进行课前准备工作..."}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-gold-600 font-mono">{Math.round(progress)}%</p>
-                  <p className="text-xs text-ink-400">总体进度</p>
-                </div>
-              </div>
-
-              <div className="h-3 bg-xuan-aged rounded-full overflow-hidden mb-5">
-                <div className="h-full bg-gradient-to-r from-gold-600 to-gold-400 rounded-full transition-all duration-700 relative" style={{ width: `${progress}%` }}>
-                  {phase !== "info" && phase !== "ready" && <div className="absolute inset-0 bg-white/20 animate-pulse" />}
-                </div>
-              </div>
-
-              {/* Step tabs */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {STEPS.map((step, idx) => (
-                  <span key={step} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
-                    idx === stepIndex ? "bg-gold-600 text-white shadow-sm" : idx < stepIndex ? "bg-stone-green/15 text-stone-green" : "bg-xuan-aged text-ink-400"
-                  }`}>
-                    {step}
-                  </span>
-                ))}
-              </div>
-
-              {/* Logs */}
-              <div className="bg-xuan-aged/30 rounded-card p-4">
-                <h4 className="text-sm font-semibold text-ink-700 mb-3 flex items-center gap-2">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-600"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  最新日志
-                </h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {logs.map((log) => (
-                    <div key={log.id} className="flex items-start gap-2 text-sm">
-                      <span className={`flex-shrink-0 px-2 py-0.5 rounded text-xs ${log.type === "system" ? "bg-gold-600/10 text-gold-600" : "bg-stone-blue/10 text-stone-blue"}`}>{log.type === "system" ? "系统" : "模型"}</span>
-                      <span className="text-ink-600">{log.content}</span>
-                    </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-2">
+              {!selectedProvider ? (
+                /* 第一层：提供商列表 */
+                <div className="space-y-0.5">
+                  {PREVIEW_PROVIDERS.map(p => (
+                    <button key={p.id} onClick={() => handleSelectProvider(p)} className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-white/5 transition-all group">
+                      <div className="w-7 h-7 rounded bg-white/10 flex items-center justify-center text-sm font-bold text-violet-300">{p.icon}</div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-white">{p.name}</p>
+                        <p className="text-[10px] text-white/40">{p.models.length} 个模型</p>
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30 group-hover:text-white/60"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
                   ))}
                 </div>
-              </div>
-            </div>
-
-            {/* Members */}
-            <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-              <h3 className="font-chapter text-lg text-ink-900 mb-4 flex items-center gap-2 tracking-wider">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-600"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                教室成员 ({DEMO_MEMBERS.filter(m => m.online).length}/30)
-              </h3>
-              <div className="space-y-2">
-                {DEMO_MEMBERS.map((member) => (
-                  <div key={member.id} className="flex items-center gap-3 p-3 bg-xuan-aged/30 rounded-card hover:bg-xuan-aged/50 transition-all cursor-pointer group">
-                    <div className="relative">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all group-hover:scale-110 ${member.role === "房主" ? "bg-gold-600 text-white shadow-md" : "bg-xuan-aged text-ink-500"}`}>{member.avatar}</div>
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-xuan-white ${member.online ? "bg-stone-green" : "bg-ink-300"}`} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-ink-900 group-hover:text-gold-600 transition-colors">{member.name}</p>
-                      <p className="text-xs text-ink-400">{member.role}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Pre-class Discussion */}
-            <div className="pre-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
-              <h3 className="font-chapter text-lg text-ink-900 mb-4 tracking-wider">课前讨论</h3>
-              <div className="space-y-3 mb-4">
-                <div className="flex items-start gap-3 p-3 bg-xuan-aged/30 rounded-card">
-                  <div className="w-8 h-8 rounded-full bg-gold-600/10 text-gold-600 flex items-center justify-center text-xs font-bold flex-shrink-0">张</div>
-                  <div>
-                    <p className="text-xs font-semibold text-ink-700 mb-0.5">张同学</p>
-                    <p className="text-sm text-ink-600">宋代山水画和元代文人画有什么区别呢？</p>
-                  </div>
+              ) : (
+                /* 第二层：模型列表 */
+                <div className="space-y-0.5">
+                  <div className="px-3 py-2 text-[10px] text-white/40 font-medium uppercase tracking-wider">{selectedProvider.models.length} 个模型</div>
+                  {selectedProvider.models.map(m => (
+                    <button key={m.id} onClick={() => handleSelectModel(selectedProvider.id, m.id)} className="w-full text-left px-4 py-3 rounded-lg flex items-center justify-between hover:bg-white/5 transition-all group">
+                      <div>
+                        <p className="text-sm text-white font-medium font-mono">{m.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {m.capabilities.includes("vision") && <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300">Vision</span>}
+                          {m.capabilities.includes("tools") && <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300">Tools</span>}
+                          {m.capabilities.includes("streaming") && <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300">Stream</span>}
+                        </div>
+                      </div>
+                      {selectedModelId === `${selectedProvider.id}:${m.id}` && (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-violet-400"><polyline points="20 6 9 17 4 12"/></svg>
+                      )}
+                    </button>
+                  ))}
                 </div>
-                <div className="flex items-start gap-3 p-3 bg-xuan-aged/30 rounded-card">
-                  <div className="w-8 h-8 rounded-full bg-gold-600/10 text-gold-600 flex items-center justify-center text-xs font-bold flex-shrink-0">王</div>
-                  <div>
-                    <p className="text-xs font-semibold text-ink-700 mb-0.5">王同学</p>
-                    <p className="text-sm text-ink-600">我觉得元代更注重写意，宋代更写实一些。</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <input placeholder="和小伙伴讨论一下课堂内容吧" className="flex-1 bg-xuan-aged/20 rounded-card px-4 py-2.5 text-sm text-ink-900 placeholder:text-ink-300 outline-none focus:bg-xuan-aged/40 transition-colors border border-transparent focus:border-gold-600/20" />
-                <button className="w-10 h-10 flex-shrink-0 rounded-full bg-cinnabar text-white flex items-center justify-center hover:scale-110 transition-transform seal-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* =============================
+          Agent 配置弹窗 — 蓝紫色调
+          ============================= */}
+      {showAgentPanel && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center" onClick={() => setShowAgentPanel(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div className={`relative ${panelBase} ${panelGradient} w-full max-w-md mx-4 max-h-[85vh] flex flex-col`} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-300"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-sm">课堂角色配置</h3>
+                  <p className="text-[10px] text-white/40">{selectedAgentIds.length} 个角色已选中</p>
+                </div>
+              </div>
+              <button onClick={() => setShowAgentPanel(false)} className="w-7 h-7 rounded-full hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Mode Tabs */}
+            <div className="px-5 pt-4">
+              <div className="inline-flex rounded-lg border border-white/10 bg-white/5 p-0.5">
+                <button onClick={() => setAgentMode("preset")} className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${agentMode === "preset" ? "bg-violet-600 text-white" : "text-white/50 hover:text-white/80"}`}>预设模式</button>
+                <button onClick={() => setAgentMode("auto")} className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${agentMode === "auto" ? "bg-violet-600 text-white" : "text-white/50 hover:text-white/80"}`}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v18"/><path d="M3 12h18"/><path d="m7 7 5 5 5-5"/><path d="m7 17 5-5 5 5"/></svg>
+                  自动生成
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {agentMode === "preset" ? (
+                <div className="space-y-2">
+                  {agents.map(a => (
+                    <div key={a.id} onClick={() => toggleAgent(a.id)} className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${selectedAgentIds.includes(a.id) ? "border-violet-400/40 bg-violet-500/10" : "border-white/5 bg-white/5 hover:bg-white/8"}`}>
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${selectedAgentIds.includes(a.id) ? "bg-violet-500 border-violet-500" : "border-white/20"}`}>
+                        {selectedAgentIds.includes(a.id) && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+                      </div>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ backgroundColor: a.color + "30", color: a.color, border: `1px solid ${a.color}40` }}>{a.avatar}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-white font-medium">{a.name}</span>
+                          {a.role === "teacher" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300">必需</span>}
+                        </div>
+                        <p className="text-[11px] text-white/40 truncate">{a.persona}</p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* 模式提示 */}
+                  {selectedAgentIds.length === 0 && (
+                    <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-300">至少选择一个智能体</div>
+                  )}
+                  {selectedAgentIds.length === 1 && (
+                    <div className="mt-3 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300">单智能体模式 — 直接回答</div>
+                  )}
+                  {selectedAgentIds.length > 1 && (
+                    <div className="mt-3 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300">多智能体协作 — {selectedAgentIds.length} 个智能体</div>
+                  )}
+
+                  {/* Max Turns（仅多智能体时） */}
+                  {selectedAgentIds.length > 1 && (
+                    <div className="mt-3 border-l-4 border-violet-500 pl-4 py-2">
+                      <p className="text-xs text-white/60 mb-2">最大对话轮数</p>
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => setMaxTurns(Math.max(1, maxTurns - 1))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20">-</button>
+                        <span className="text-sm text-white font-medium w-6 text-center">{maxTurns}</span>
+                        <button onClick={() => setMaxTurns(Math.min(20, maxTurns + 1))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20">+</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Auto 模式 */
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="w-16 h-16 rounded-full bg-violet-500/10 flex items-center justify-center mb-4 animate-pulse">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-violet-400"><path d="M12 3v18"/><path d="M3 12h18"/><path d="m7 7 5 5 5-5"/><path d="m7 17 5-5 5 5"/></svg>
+                  </div>
+                  <p className="text-sm text-white/70 mb-1">AI 自动生成角色</p>
+                  <p className="text-xs text-white/40">系统将自动生成教师、助教和学生角色</p>
+                  <p className="text-xs text-white/30 mt-2">音色将自动分配</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-4 border-t border-white/10 flex justify-end gap-2">
+              <button onClick={() => setShowAgentPanel(false)} className="px-4 py-2 rounded-lg text-xs text-white/60 hover:text-white hover:bg-white/5 transition-all">取消</button>
+              <button onClick={() => setShowAgentPanel(false)} className="px-4 py-2 rounded-lg text-xs bg-violet-600 text-white hover:bg-violet-500 transition-all">保存配置</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

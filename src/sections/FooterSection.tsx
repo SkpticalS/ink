@@ -2,7 +2,7 @@ export default function FooterSection() {
   return (
     <footer className="relative bg-ink-900 text-xuan-white py-16 px-4 md:px-8 overflow-hidden">
       {/* Decorative top edge */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-600/40 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-600/40 to-transparent" ></div>
       
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-10">
@@ -22,7 +22,7 @@ export default function FooterSection() {
             {["关于我们", "使用帮助", "隐私政策", "联系合作"].map((link) => (
               <button key={link} className="text-sm text-ink-400 hover:text-gold-400 transition-colors duration-300 relative group">
                 {link}
-                <span className="absolute -bottom-1 left-0 w-0 h-px bg-gold-600 group-hover:w-full transition-all duration-300" />
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-gold-600 group-hover:w-full transition-all duration-300" ></span>
               </button>
             ))}
           </div>
@@ -46,9 +46,9 @@ export default function FooterSection() {
         <div className="mt-12 pt-6 border-t border-ink-700/30 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-ink-500 tracking-wider">© 2026 墨课平台 · 以科技传艺道</p>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-px bg-gold-600/30" />
-            <div className="w-1.5 h-1.5 rounded-full bg-gold-600/40" />
-            <div className="w-8 h-px bg-gold-600/30" />
+            <div className="w-8 h-px bg-gold-600/30" ></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-gold-600/40" ></div>
+            <div className="w-8 h-px bg-gold-600/30" ></div>
           </div>
         </div>
       </div>

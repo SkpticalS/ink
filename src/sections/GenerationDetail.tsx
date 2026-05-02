@@ -2,28 +2,15 @@ import { useState } from "react";
 import gsap from "gsap";
 import { useEffect, useRef } from "react";
 
-interface GenerationStep {
-  id: string;
-  label: string;
-  status: "pending" | "running" | "completed" | "error";
-  detail: string;
-  logs: string[];
-  duration?: string;
+import type { GenerationStep } from "../lib/data";
+
+interface GenerationDetailProps {
+  steps?: GenerationStep[];
+  overallProgress?: number;
 }
 
-const INITIAL_STEPS: GenerationStep[] = [
-  { id: "outline", label: "大纲生成", status: "completed", detail: "AI 分析主题并生成结构化课堂大纲", logs: ["[14:32:01] 开始分析主题：宋代山水画", "[14:32:03] 提取关键词：范宽、郭熙、三远法、院体画", "[14:32:08] 生成大纲结构：4章12节", "[14:32:15] 大纲生成完成"], duration: "14s" },
-  { id: "slides", label: "幻灯片生成", status: "completed", detail: "将大纲条目渲染为带视觉元素的幻灯片", logs: ["[14:32:16] 开始生成第1章幻灯片", "[14:32:28] 生成配图：宋代山水画概述（4张）", "[14:32:45] 生成第2章：范宽与溪山行旅图", "[14:33:02] 生成第3章：郭熙与三远法", "[14:33:18] 生成第4章：边角构图", "[14:33:35] 幻灯片生成完成，共12页"], duration: "1m19s" },
-  { id: "quiz", label: "测验生成", status: "completed", detail: "为每个知识点生成交互式测验题目", logs: ["[14:33:36] 分析关键知识点", "[14:33:42] 生成单选题：雨点皴、三远法", "[14:33:50] 生成多选题：边角构图特点", "[14:33:58] 生成简答题：写实主义成因", "[14:34:05] 测验生成完成，共4题"], duration: "29s" },
-  { id: "interactive", label: "交互场景", status: "running", detail: "生成 HTML 交互式模拟实验", logs: ["[14:34:06] 开始构建交互场景", "[14:34:15] 生成皴法对比交互组件", "[14:34:28] 生成三远法空间演示", "[14:34:40] 渲染可视化图表..."], duration: "进行中" },
-  { id: "tts", label: "语音合成", status: "pending", detail: "为 AI 讲师生成语音讲解", logs: [] },
-  { id: "export", label: "课件导出", status: "pending", detail: "生成可下载的 PPTX 与 HTML", logs: [] },
-];
-
-export default function GenerationDetail() {
-  const [steps, setSteps] = useState<GenerationStep[]>(INITIAL_STEPS);
-  const [expandedStep, setExpandedStep] = useState<string | null>("slides");
-  const [overallProgress, setOverallProgress] = useState(58);
+export default function GenerationDetail({ steps = [], overallProgress = 0 }: GenerationDetailProps) {
+  const [expandedStep, setExpandedStep] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,7 +27,7 @@ export default function GenerationDetail() {
   const statusIcon = (status: GenerationStep["status"]) => {
     switch (status) {
       case "completed": return <span className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-white text-xs">✓</span>;
-      case "running": return <span className="w-6 h-6 rounded-full border-2 border-violet-400 border-t-transparent animate-spin" />;
+      case "running": return <span className="w-6 h-6 rounded-full border-2 border-violet-400 border-t-transparent animate-spin" ></span>;
       case "error": return <span className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xs">✗</span>;
       default: return <span className="w-6 h-6 rounded-full bg-slate-700/50 text-slate-500 flex items-center justify-center text-xs">○</span>;
     }
@@ -75,7 +62,7 @@ export default function GenerationDetail() {
           </div>
         </div>
         <div className="mt-4 h-1.5 bg-slate-800/80 rounded-full overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-violet-500 via-indigo-400 to-violet-400 transition-all duration-1000" style={{ width: `${overallProgress}%` }} />
+          <div className="h-full rounded-full bg-gradient-to-r from-violet-500 via-indigo-400 to-violet-400 transition-all duration-1000" style={{ width: `${overallProgress}%` }} ></div>
         </div>
       </div>
 
@@ -128,7 +115,7 @@ export default function GenerationDetail() {
       {/* Footer */}
       <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" ></div>
           <span className="text-xs text-slate-400">AI 正在生成交互场景...</span>
         </div>
         <div className="flex items-center gap-2">

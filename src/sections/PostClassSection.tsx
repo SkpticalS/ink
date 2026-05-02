@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
-import { DEMO_KNOWLEDGE_TREE, DEMO_TIMELINE } from "../lib/data";
+import type { TreeNode, TimelineRecord } from "../lib/data";
 
-interface TreeNode {
-  id: string;
-  name: string;
-  children?: TreeNode[];
+interface PostClassSectionProps {
+  knowledgeTree?: TreeNode;
+  timeline?: TimelineRecord[];
 }
 
-export default function PostClassSection() {
+export default function PostClassSection({ knowledgeTree, timeline = [] }: PostClassSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(["root"]));
   const [expandedRecord, setExpandedRecord] = useState<number | null>(null);
@@ -29,7 +28,11 @@ export default function PostClassSection() {
   const toggleNode = (id: string) => {
     setExpandedNodes((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -65,16 +68,16 @@ export default function PostClassSection() {
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img src="/images/palace-wall.jpg" alt="" className="w-full h-full object-cover opacity-[0.05]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-xuan-white via-transparent to-xuan-white" />
+        <div className="absolute inset-0 bg-gradient-to-b from-xuan-white via-transparent to-xuan-white" ></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Title */}
         <div className="text-center mb-14 post-anim">
           <div className="inline-flex items-center gap-4 mb-4">
-            <div className="w-16 h-px bg-gradient-to-r from-transparent to-gold-600/40" />
-            <div className="w-3 h-3 rounded-full bg-gold-600/60" />
-            <div className="w-16 h-px bg-gradient-to-l from-transparent to-gold-600/40" />
+            <div className="w-16 h-px bg-gradient-to-r from-transparent to-gold-600/40" ></div>
+            <div className="w-3 h-3 rounded-full bg-gold-600/60" ></div>
+            <div className="w-16 h-px bg-gradient-to-l from-transparent to-gold-600/40" ></div>
           </div>
           <h2 className="text-title text-ink-900 mb-3">课后归档</h2>
           <p className="text-annotation text-ink-500 tracking-[0.15em]">温故知新 · 知识成体系</p>
@@ -84,7 +87,7 @@ export default function PostClassSection() {
         <div className="post-anim mb-10 chinese-frame shadow-frame max-w-5xl mx-auto">
           <div className="chinese-frame-inner aspect-[21/9] relative overflow-hidden">
             <img src="/images/palace-wall.jpg" alt="" className="w-full h-full object-cover opacity-40 hover:scale-105 transition-transform duration-700" />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-900/50 via-ink-900/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-900/50 via-ink-900/20 to-transparent" ></div>
             <div className="absolute bottom-5 left-6">
               <p className="text-gold-300 text-xs tracking-[0.2em] mb-1">KNOWLEDGE ARCHIVE</p>
               <p className="text-white text-lg font-semibold tracking-wider" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>
@@ -100,12 +103,19 @@ export default function PostClassSection() {
           <div className="post-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-chapter text-ink-900 flex items-center gap-2">
-                <span className="w-1 h-6 bg-gold-600 rounded-full" />
+                <span className="w-1 h-6 bg-gold-600 rounded-full" ></span>
                 知识梳理
               </h3>
               <span className="text-xs text-ink-400">点击节点展开详情</span>
             </div>
-            <div className="max-w-2xl">{renderTree(DEMO_KNOWLEDGE_TREE)}</div>
+            {knowledgeTree ? <div className="max-w-2xl">{renderTree(knowledgeTree)}</div> : (
+              <div className="text-center py-10">
+                <div className="w-12 h-12 rounded-full bg-xuan-aged flex items-center justify-center mx-auto mb-3">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-400"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                </div>
+                <p className="text-ink-500 text-sm">课程结束后，知识树将自动生成</p>
+              </div>
+            )}
           </div>
 
           {/* Timeline + Video */}
@@ -113,7 +123,7 @@ export default function PostClassSection() {
             <div className="post-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-chapter text-ink-900 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-gold-600 rounded-full" />
+                  <span className="w-1 h-6 bg-gold-600 rounded-full" ></span>
                   课堂讨论归档
                 </h3>
                 <div className="ink-input">
@@ -121,9 +131,14 @@ export default function PostClassSection() {
                 </div>
               </div>
               <div className="relative pl-6">
-                <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-gold-600 via-gold-300 to-transparent" />
+                <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-gold-600 via-gold-300 to-transparent" ></div>
                 <div className="space-y-4">
-                  {DEMO_TIMELINE.map((record) => (
+                  {timeline.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-ink-400 text-sm">课堂讨论记录将在此归档</p>
+                    </div>
+                  )}
+                  {timeline.map((record) => (
                     <div key={record.id} className="relative">
                       <div
                         className={`absolute -left-6 top-2 w-3.5 h-3.5 rounded-full border-2 border-gold-600 bg-white transition-all cursor-pointer hover:scale-150 hover:bg-gold-600 hover:shadow-[0_0_0_8px_rgba(196,150,61,0.15)] ${expandedRecord === record.id ? "bg-gold-600" : ""}`}
@@ -150,11 +165,11 @@ export default function PostClassSection() {
             {/* Video */}
             <div className="post-anim bg-xuan-white/90 backdrop-blur-sm rounded-card p-6 shadow-paper border border-gold-600/10">
               <h3 className="text-chapter text-ink-900 mb-4 flex items-center gap-2">
-                <span className="w-1 h-6 bg-gold-600 rounded-full" />
+                <span className="w-1 h-6 bg-gold-600 rounded-full" ></span>
                 课程回放
               </h3>
               <div className="relative">
-                <div className="h-4 bg-gradient-to-r from-ink-900 via-ink-700 to-ink-900 rounded-t-card" />
+                <div className="h-4 bg-gradient-to-r from-ink-900 via-ink-700 to-ink-900 rounded-t-card" ></div>
                 <div className="relative aspect-video bg-ink-900/5 overflow-hidden">
                   <img src="/images/replay-scene.jpg" alt="课程回放" className="w-full h-full object-cover opacity-70" />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -167,7 +182,7 @@ export default function PostClassSection() {
                     </button>
                   </div>
                 </div>
-                <div className="h-4 bg-gradient-to-r from-ink-900 via-ink-700 to-ink-900 rounded-b-card" />
+                <div className="h-4 bg-gradient-to-r from-ink-900 via-ink-700 to-ink-900 rounded-b-card" ></div>
 
                 <div className="mt-4 px-1">
                   <div className="flex items-center gap-3">
@@ -176,7 +191,7 @@ export default function PostClassSection() {
                       <div className="h-1.5 bg-xuan-aged rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-gold-600 to-gold-400 rounded-full relative transition-all" style={{ width: `${videoProgress}%` }}>
                           {[15, 30, 50, 70].map((pos) => (
-                            <div key={pos} className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-gold-600 rounded-full cursor-pointer hover:scale-175 transition-transform border border-xuan-white" style={{ left: `${pos}%` }} />
+                            <div key={pos} className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-gold-600 rounded-full cursor-pointer hover:scale-175 transition-transform border border-xuan-white" style={{ left: `${pos}%` }} ></div>
                           ))}
                         </div>
                       </div>
