@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import LoginPage from "./sections/LoginPage";
+import ExhibitionPage from "./sections/ExhibitionPage";
 import LobbyPage from "./sections/LobbyPage";
 import ClassroomPage from "./sections/ClassroomPage";
 
-export type AppPage = "login" | "lobby" | "classroom";
+export type AppPage = "login" | "exhibition" | "lobby" | "classroom";
 export type ClassroomPhase = "pre" | "in" | "post";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
   const [classroomPhase, setClassroomPhase] = useState<ClassroomPhase>("pre");
   const [completedPhases, setCompletedPhases] = useState<ClassroomPhase[]>([]);
 
+  const goToExhibition = useCallback(() => setPage("exhibition"), []);
   const goToLobby = useCallback(() => setPage("lobby"), []);
   const goToClassroom = useCallback(() => {
     setPage("classroom");
@@ -35,7 +37,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-xuan-white">
-      {page === "login" && <LoginPage onLogin={goToLobby} />}
+      {page === "login" && <LoginPage onLogin={goToExhibition} />}
+      {page === "exhibition" && <ExhibitionPage onEnterLobby={goToLobby} />}
       {page === "lobby" && <LobbyPage onEnterClassroom={goToClassroom} />}
       {page === "classroom" && (
         <ClassroomPage
