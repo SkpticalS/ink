@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import type { JSX } from "react";
 import gsap from "gsap";
 import type { Message, Member } from "../lib/data";
 import SlidesPlayer from "./SlidesPlayer";

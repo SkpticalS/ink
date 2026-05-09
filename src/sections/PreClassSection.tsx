@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import type { JSX } from "react";
 import gsap from "gsap";
 import type { Source } from "../lib/data";
 import GenerationDetail from "./GenerationDetail";
